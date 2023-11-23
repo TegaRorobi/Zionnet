@@ -1,0 +1,11 @@
+
+.env
+.githidden/
+
+*pycache*
+*.pyc
+
+venv/
+env/
+VENV/
+ENV/
