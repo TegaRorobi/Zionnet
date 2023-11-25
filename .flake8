@@ -1,0 +1,11 @@
+[flake8]
+exclude =
+    venv,
+    .env,
+    __pycache__,
+    .gitignore,
+    *.pot,
+    *.py[co],
+    .git
+   Pipfile
+   Pipfile.lock 
