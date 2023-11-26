@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     "JobPosting",
     "MarketPlace",
     "ZionVest",
-    'rest_framework',
+    'drf_yasg',
     'authentication'
 ]
 
@@ -133,11 +133,24 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name' : 'Authorization',
+            'in': 'header'
+        }
+    }
+}
+
 REST_FRAMEWORK = {
     'NON_FIELD_ERRORS_KEY' : 'error',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated"
+    ]
 }
 
 EMAIL_USE_TLS = True
