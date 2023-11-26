@@ -30,7 +30,7 @@ DEBUG = envvar("DEBUG", cast=bool, default=True)
 split_env_str = lambda v: [s.strip() for s in v.split(",")]
 ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str)
 
-AUTH_USER_MODEL = 'authentication.User'
+AUTH_USER_MODEL = 'authentication.CustomUser'
 # Application definition
 
 INSTALLED_APPS = [
