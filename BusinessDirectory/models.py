@@ -1,16 +1,23 @@
 from django.db import models
 from authentication.models import CustomUser as User
+from helpers.models import TrackingModel
 
 
-class BusinessListingCategory(models.Model):
+class BusinessListingCategory(TrackingModel, models.Model):
     name = models.CharField(max_length=255)
     image = models.FileField(upload_to="business_listing_category_images")
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
 
 
-class BusinessListing(models.Model):
-    vendor_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.ForeignKey(BusinessListingCategory, on_delete=models.CASCADE)
+class BusinessListing(TrackingModel, models.Model):
+    vendor_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="listings"
+    )
+    category = models.ForeignKey(
+        BusinessListingCategory, on_delete=models.CASCADE, related_name="listings"
+    )
     name = models.CharField(max_length=255)
     description = models.TextField()
     country = models.CharField(max_length=255)
@@ -18,12 +25,19 @@ class BusinessListing(models.Model):
     city = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
     physical_address = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
 
 
-class BusinessListingRequest(models.Model):
+class BusinessListingRequest(TrackingModel, models.Model):
+    vendor_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="listing_request"
+    )
     listing_category = models.ForeignKey(
-        BusinessListingCategory, on_delete=models.CASCADE
+        BusinessListingCategory,
+        on_delete=models.CASCADE,
+        related_name="listing_request",
     )
     id_type = models.CharField(
         max_length=20,
@@ -35,28 +49,49 @@ class BusinessListingRequest(models.Model):
     id_front = models.FileField(upload_to="business_listing_request_id_front")
     id_back = models.FileField(upload_to="business_listing_request_id_back")
     is_approved = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Request by {self.vendor_id.first_name}"
 
 
-class BusinessListingImage(models.Model):
+class BusinessListingImage(TrackingModel, models.Model):
     image = models.FileField(upload_to="business_listing_images")
-    listing = models.ForeignKey(BusinessListing, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
+    listing = models.ForeignKey(
+        BusinessListing, on_delete=models.CASCADE, related_name="listing_images"
+    )
+
+    def __str__(self):
+        return f"Image for {self.listing.name}"
 
 
-class BusinessListingFile(models.Model):
+class BusinessListingFile(TrackingModel, models.Model):
     file = models.FileField(upload_to="business_listing_files")
-    listing = models.ForeignKey(BusinessListing, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
+    listing = models.ForeignKey(
+        BusinessListing, on_delete=models.CASCADE, related_name="listing_files"
+    )
+
+    def __str__(self):
+        return f"File for {self.listing.name}"
 
 
 class BusinessListingSocials(models.Model):
     social_urls = models.CharField(max_length=255)
-    listing = models.ForeignKey(BusinessListing, on_delete=models.CASCADE)
+    listing = models.ForeignKey(
+        BusinessListing, on_delete=models.CASCADE, related_name="listing_socials"
+    )
+
+    def __str__(self):
+        return f"Social for {self.listing.name}"
 
 
 class BusinessListingReview(models.Model):
-    listing = models.ForeignKey(BusinessListing, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    listing = models.ForeignKey(
+        BusinessListing, on_delete=models.CASCADE, related_name="listing_reviews"
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="listing_reviews"
+    )
     comment = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review for {self.listing.name}"
