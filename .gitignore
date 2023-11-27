@@ -9,3 +9,4 @@ venv/
 env/
 VENV/
 ENV/
+db.sqlite3
