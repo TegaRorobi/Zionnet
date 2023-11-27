@@ -74,7 +74,7 @@ class BusinessListingFile(TrackingModel, models.Model):
         return f"File for {self.listing.name}"
 
 
-class BusinessListingSocials(models.Model):
+class BusinessListingSocials(TrackingModel, models.Model):
     social_urls = models.CharField(max_length=255)
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_socials"
@@ -84,7 +84,7 @@ class BusinessListingSocials(models.Model):
         return f"Social for {self.listing.name}"
 
 
-class BusinessListingReview(models.Model):
+class BusinessListingReview(TrackingModel, models.Model):
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_reviews"
     )
