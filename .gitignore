@@ -1,7 +1,9 @@
 
 .env
 .githidden/
-
+.venv
+.vscode
+s
 *pycache*
 *.pyc
 
