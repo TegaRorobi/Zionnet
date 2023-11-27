@@ -46,8 +46,9 @@ INSTALLED_APPS = [
     "JobPosting",
     "MarketPlace",
     "ZionVest",
-    "drf_yasg",
-    "authentication",
+    'drf_yasg',
+    'authentication',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
