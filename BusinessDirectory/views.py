@@ -1,6 +1,6 @@
 from rest_framework import generics, filters, status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+<<<<<<< HEAD
 from rest_framework.views import APIView
 from .models import BusinessListing, BusinessListingCategory
 from .pagination import ListingPagination
@@ -8,6 +8,29 @@ from .serializers import BusinessListingCategorySerializer, BusinessListingSeria
 from .permissions import IsVendorVerified
 from django.db.models import Count
 
+=======
+from .pagination import ListingPagination
+from .permissions import IsVendorVerified
+from .serializers import *
+from .models import *
+
+# Create your views here.
+
+
+class BusinessListingRequestCreateView(generics.CreateAPIView):
+    queryset = BusinessListingRequest.objects.all()
+    serializer_class = BusinessListingRequestSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(vendor_id=self.request.user)
+
+class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
+    queryset = BusinessListing.objects.all()
+    serializer_class = BusinessListingSerializer
+
+    def perform_create(self, serializer):
+        return Response("Vendor request and listing created successfully.", status=status.HTTP_201_CREATED)
+>>>>>>> 5470ee15bf4c6374679f836e89a957c3916db21c
 
 class BusinessListingListCreateView(generics.ListCreateAPIView):
     """
@@ -93,7 +116,7 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         try:
             self.perform_create(serializer)
-        except Response as response:
+        except Exception as response:
             return response
         headers = self.get_success_headers(serializer.data)
         return Response(
@@ -123,3 +146,4 @@ class PopularBusinessListingCategoryListView(APIView):
 
         serializer = BusinessListingCategorySerializer(popular_categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
