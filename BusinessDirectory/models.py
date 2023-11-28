@@ -1,6 +1,7 @@
 from django.db import models
 from authentication.models import CustomUser as User
 from helpers.models import TrackingModel
+from django.utils import timezone
 
 
 class BusinessListingCategory(TrackingModel, models.Model):
@@ -25,6 +26,8 @@ class BusinessListing(TrackingModel, models.Model):
     city = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
     physical_address = models.CharField(max_length=255)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -79,6 +82,9 @@ class BusinessListingSocials(TrackingModel, models.Model):
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_socials"
     )
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return f"Social for {self.listing.name}"
@@ -92,6 +98,9 @@ class BusinessListingReview(TrackingModel, models.Model):
         User, on_delete=models.CASCADE, related_name="listing_reviews"
     )
     comment = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return f"Review for {self.listing.name}"
