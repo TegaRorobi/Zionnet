@@ -40,15 +40,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
+
+    # apps
     "Account",
+    "authentication",
     "BusinessDirectory",
-    "JobPosting",
     "MarketPlace",
+    "JobPosting",
     "ZionVest",
-    'drf_yasg',
-    'authentication',
-    'rest_framework_simplejwt.token_blacklist',
+
+    # third party libraries
+    "rest_framework",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
