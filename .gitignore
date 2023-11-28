@@ -139,7 +139,10 @@ dmypy.json
 
 .env
 .githidden/
-
+.venv
+.vscode
+media/
+s
 *pycache*
 *.pyc
 
