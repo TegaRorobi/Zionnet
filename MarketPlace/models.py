@@ -90,3 +90,25 @@ class ProductReaction(TimestampsModel):
 
     def __str__(self) -> str:
         return f"{self.product.__str__()} {self.reaction}d by {self.reactor.__str__() or 'AnonymousUser'}"
+
+
+class Cart(TimestampsModel):
+    owner = models.OneToOneField(User, related_name='cart', on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return 'Cart owned by ' + self.owner.__str__()
+
+
+class CartItem(TimestampsModel):
+    cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='cartitems', on_delete=models.CASCADE)
+    quantity = models.IntegerField(_('number of products'), default=1)
+
+    
+    def delete(self, *args, **kwargs): # noqa
+        # return the product(s) to the shelves
+        self.product.quantity += self.quantity
+        return super().delete(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"Cart item: {self.quantity} nos of {self.product.__str__}"

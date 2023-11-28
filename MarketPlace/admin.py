@@ -35,3 +35,17 @@ class ProductRatingAdmin(admin.ModelAdmin):
 class ProductReactionAdmin(admin.ModelAdmin):
     model = ProductReaction
     list_display = 'user', 'product', 'reaction'
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    model = Cart
+    list_display = 'owner', 'created_at'
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    model = CartItem
+    list_display = 'cart_owner_', 'product', 'quantity'
+
+    @admin.display()
+    def cart_owner_(self, obj):
+        return obj.cart.owner.__str__()
