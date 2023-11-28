@@ -1,5 +1,7 @@
+from django.db.models import Count
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
+<<<<<<< HEAD
 <<<<<<< HEAD
 from rest_framework.views import APIView
 from .models import BusinessListing, BusinessListingCategory
@@ -9,6 +11,9 @@ from .permissions import IsVendorVerified
 from django.db.models import Count
 
 =======
+=======
+from rest_framework.views import APIView
+>>>>>>> 3a0badbde292a94d78c70318067c67a6aa364d15
 from .pagination import ListingPagination
 from .permissions import IsVendorVerified
 from .serializers import *
@@ -30,7 +35,10 @@ class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         return Response("Vendor request and listing created successfully.", status=status.HTTP_201_CREATED)
+<<<<<<< HEAD
 >>>>>>> 5470ee15bf4c6374679f836e89a957c3916db21c
+=======
+>>>>>>> 3a0badbde292a94d78c70318067c67a6aa364d15
 
 class BusinessListingListCreateView(generics.ListCreateAPIView):
     """
@@ -146,4 +154,6 @@ class PopularBusinessListingCategoryListView(APIView):
 
         serializer = BusinessListingCategorySerializer(popular_categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+<<<<<<< HEAD
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
