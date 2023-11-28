@@ -8,6 +8,13 @@ from .serializers import BusinessListingSerializer
 from .permissions import IsVendorVerified
 
 class BusinessListingListCreateView(generics.ListCreateAPIView):
+    """
+    API view for listing and creating business listings.
+    - GET method: Retrieves a paginated list of business listings.
+    - POST method: Creates a new business listing along with associated images and files.
+    Requires authentication for GET requests. For POST requests,a vendor profile
+    verification is required.
+    """
     queryset = BusinessListing.objects.all()
     serializer_class = BusinessListingSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -20,6 +27,7 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
     
     
     def retrieve(self, request, *args, **kwargs):
+        # retrieves an instance of a listing and attach the related images for the listing 
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         
@@ -32,6 +40,7 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
         
         
     def list(self, request, *args, **kwargs):
+        # getting list of listings for an authenticated get request with paginated response 
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -41,6 +50,14 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
+        """
+        Custom method to handle the creation of business listings.
+        Args:
+            serializer: BusinessListingSerializer instance, responsible for validating and saving the main listing details.
+        Raises:
+            rest_framework.exceptions.ValidationError: If validation fails for the main listing details.
+        Creates a new BusinessListing and associates images and files with it.
+        """
         images_data = self.request.FILES.getlist('images', [])
         files_data = self.request.FILES.getlist('files', [])
 
@@ -50,11 +67,13 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
             image_serializer.is_valid(raise_exception=True)
             image_serializer.save()
         
+        #save associated files 
         for file_data in files_data:
             file_serializer = BusinessListingFileSerializer(data={'file': file_data, 'listing': business_listing.id})
             file_serializer.is_valid(raise_exception=True)
             file_serializer.save()
-    
+        
+        # save an instance of business listing
         serializer.is_valid(raise_exception=True)
         business_listing = serializer.save(vendor_id=self.request.user)
        
