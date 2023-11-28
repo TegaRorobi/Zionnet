@@ -55,8 +55,8 @@ class BusinessListingRequest(TimestampsModel):
             ("type_2", "Type 2"),
         ],
     )
-    id_front = models.FileField(upload_to="business_listing_request_id_front")
-    id_back = models.FileField(upload_to="business_listing_request_id_back")
+    id_front = models.FileField(upload_to="business_listing_request_id_front", null=True, blank=True)
+    id_back = models.FileField(upload_to="business_listing_request_id_back", null=True, blank=True)
     is_approved = models.BooleanField(default=False)
 
     def __str__(self):

@@ -150,6 +150,10 @@ venv/
 env/
 VENV/
 ENV/
+<<<<<<< HEAD
+*.sqlite3
+*/migrations/
+=======
 
 __pycache__
 .env
@@ -287,3 +291,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+>>>>>>> dev
