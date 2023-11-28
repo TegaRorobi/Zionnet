@@ -27,6 +27,7 @@ def top_rated_listings(request):
 @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 @permission_classes([AllowAny])
+#Endpoint to Retrieve user listings
 def user_listings(request):
     try:
         user_listings = BusinessListing.objects.filter(vendor_id=request.user.id)
