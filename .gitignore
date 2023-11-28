@@ -9,4 +9,5 @@ venv/
 env/
 VENV/
 ENV/
-db.sqlite3
+*.sqlite3
+*/migrations/
