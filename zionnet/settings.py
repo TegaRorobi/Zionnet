@@ -30,7 +30,7 @@ DEBUG = envvar("DEBUG", cast=bool, default=True)
 split_env_str = lambda v: [s.strip() for s in v.split(",")]
 ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str)
 
-AUTH_USER_MODEL = 'authentication.CustomUser'
+AUTH_USER_MODEL = "authentication.CustomUser"
 # Application definition
 
 INSTALLED_APPS = [
@@ -81,6 +81,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "zionnet.wsgi.application"
 
+# Media settings
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -132,30 +135,24 @@ STATIC_URL = "static/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name' : 'Authorization',
-            'in': 'header'
-        }
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
     }
 }
 
 REST_FRAMEWORK = {
-    'NON_FIELD_ERRORS_KEY' : 'error',
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "NON_FIELD_ERRORS_KEY": "error",
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated"
-    ]
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
 
 EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = envvar('EMAIL_HOST_USER', cast=str)
-EMAIL_HOST_PASSWORD = envvar('EMAIL_HOST_PASSWORD', cast=str)
+EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
+EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)
