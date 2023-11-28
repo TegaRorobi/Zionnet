@@ -9,6 +9,10 @@ from .models import (
     BusinessListingReview,
 )
 
+class BusinessListingRequestSerializer(serializers.ModelSerializer):
+    vendor_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+
 
 class BusinessListingCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,6 +56,12 @@ class BusinessListingRequestSerializer(serializers.ModelSerializer):
         model = BusinessListingRequest
         fields = '__all__'
 
+class BusinessListingSerializer(serializers.ModelSerializer):
+    vendor_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = BusinessListing
+        fields = '__all__'
 class BusinessListingReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = BusinessListingReview

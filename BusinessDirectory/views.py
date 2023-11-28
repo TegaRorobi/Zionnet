@@ -1,13 +1,28 @@
+from django.db.models import Count
 from rest_framework import generics, filters, status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import BusinessListing, BusinessListingCategory
 from .pagination import ListingPagination
-from .serializers import BusinessListingCategorySerializer, BusinessListingSerializer
 from .permissions import IsVendorVerified
-from django.db.models import Count
+from .serializers import *
+from .models import *
 
+# Create your views here.
+
+
+class BusinessListingRequestCreateView(generics.CreateAPIView):
+    queryset = BusinessListingRequest.objects.all()
+    serializer_class = BusinessListingRequestSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(vendor_id=self.request.user)
+
+class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
+    queryset = BusinessListing.objects.all()
+    serializer_class = BusinessListingSerializer
+
+    def perform_create(self, serializer):
+        return Response("Vendor request and listing created successfully.", status=status.HTTP_201_CREATED)
 
 class BusinessListingListCreateView(generics.ListCreateAPIView):
     """
@@ -93,7 +108,7 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         try:
             self.perform_create(serializer)
-        except Response as response:
+        except Exception as response:
             return response
         headers = self.get_success_headers(serializer.data)
         return Response(
