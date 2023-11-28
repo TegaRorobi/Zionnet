@@ -112,3 +112,18 @@ class CartItem(TimestampsModel):
 
     def __str__(self) -> str:
         return f"Cart item: {self.quantity} nos of {self.product.__str__}"
+
+
+class Order(TimestampsModel):
+    ORDER_STATUS_CHOICES = [
+        ('shipped', 'En route'),
+        ('cancelled', 'Cancelled'),
+        ('delivered', 'Delivered')
+    ]
+    buyer = models.ForeignKey(User, related_name='orders', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='orders', on_delete=models.CASCADE)
+    quantity = models.IntegerField(_('number of products'), default=1)
+    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES)
+
+    def __str__(self) -> str:
+        return f"{self.status}: {self.quantity} nos of {self.product.__str__()}"

@@ -49,3 +49,8 @@ class CartItemAdmin(admin.ModelAdmin):
     @admin.display()
     def cart_owner_(self, obj):
         return obj.cart.owner.__str__()
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    model = Order
+    list_display = 'buyer', 'product', 'quantity', 'status'
