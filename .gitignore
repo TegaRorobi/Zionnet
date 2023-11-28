@@ -3,6 +3,7 @@
 .githidden/
 .venv
 .vscode
+media/
 s
 *pycache*
 *.pyc
