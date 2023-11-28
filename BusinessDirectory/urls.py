@@ -1,7 +1,9 @@
 from django.urls import path
-from .views import BusinessListingRequestCreateView, BusinessListingVendorRequestCreateView
+from .views import BusinessListingListCreateView, BusinessListingRequestCreateView, BusinessListingVendorRequestCreateView
 
 urlpatterns = [
-    path('request/', BusinessListingRequestCreateView.as_view(), name='business_listing_request'),
-    path('vendor/request/', BusinessListingVendorRequestCreateView.as_view(), name='business_listing_vendor_request'),
+    path('listings/request/', BusinessListingRequestCreateView.as_view(), name='business_listing_request'),
+    path('listings/vendor/request/', BusinessListingVendorRequestCreateView.as_view(), name='business_listing_vendor_request'),
+    path('listings/', BusinessListingListCreateView.as_view(), name='business-listings'),
+
 ]
