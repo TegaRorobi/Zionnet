@@ -10,7 +10,12 @@ urlpatterns = [
     ),
     re_path(
         '^marketplace/(?P<pk>\d+)/products/categories/?$',
-        GetAllProductCategoriesView.as_view(),
+        GetProductCategoriesView.as_view({'get':'get_all_categories'}),
         name='marketplace-product-categories-list'
+    ),
+    re_path(
+        '^marketplace/(?P<pk>\d+)/products/categories/popular/?$',
+        GetProductCategoriesView.as_view({'get':'get_popular_categories'}),
+        name='marketplace-popular-product-categories-list'
     )
 ]

@@ -1,6 +1,9 @@
 
-from rest_framework import generics, status, permissions, pagination
+from rest_framework import (
+    generics, viewsets, decorators, status, permissions
+)
 from rest_framework.response import Response
+from django.db.models import Count
 from .serializers import *
 from .models import *
 
@@ -20,16 +23,28 @@ class GetAllMarketPlacesView(generics.GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class GetAllProductCategoriesView(generics.GenericAPIView):
+class GetProductCategoriesView(viewsets.GenericViewSet):
 
-    "API View to get all product categories within a marketplace"
+    "API View to get product categories within a marketplace"
 
     queryset = MarketPlace.objects.order_by('-id')
     permission_classes = [permissions.AllowAny]
     serializer_class = ProductCategorySerializer
 
-    def get(self, request, *args, **kwargs):
+    @decorators.action(detail=False)
+    def get_all_categories(self, request, *args, **kwargs):
+        "API Viewset action to get all product categories within a marketplace"
         marketplace = self.get_object()
-        product_categories = marketplace.product_categories.all()
+        product_categories = marketplace.product_categories.order_by('name')
+        serializer = self.get_serializer(product_categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @decorators.action(detail=False)
+    def get_popular_categories(self, request, *args, **kwargs):
+        "API Viewset action to get popular product categories within a marketplace"
+        marketplace = self.get_object()
+        product_categories = marketplace.product_categories.annotate(
+            product_count=Count('products')
+        ).order_by('-product_count')
         serializer = self.get_serializer(product_categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
