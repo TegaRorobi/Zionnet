@@ -8,23 +8,32 @@ from .models import (
     BusinessListingFile,
     BusinessListingSocials,
     BusinessListingReview,
+    BusinessLoan,
 )
+
 
 class BusinessListingImageInline(admin.TabularInline):
     model = BusinessListingImage
-    extra = 1 
-    
+    extra = 1
+
+
 class BusinessListingFileInline(admin.TabularInline):
     model = BusinessListingFile
-    extra = 1 
+    extra = 1
+
 
 class BusinessListingSocialsInline(admin.TabularInline):
     model = BusinessListingSocials
     extra = 1
 
+
 class BusinessListingAdmin(admin.ModelAdmin):
-    inlines = [BusinessListingImageInline,
-    BusinessListingFileInline,BusinessListingSocialsInline]
+    inlines = [
+        BusinessListingImageInline,
+        BusinessListingFileInline,
+        BusinessListingSocialsInline,
+    ]
+
 
 admin.site.register(BusinessListing, BusinessListingAdmin)
 
@@ -34,3 +43,4 @@ admin.site.register(BusinessListingImage)
 admin.site.register(BusinessListingFile)
 admin.site.register(BusinessListingSocials)
 admin.site.register(BusinessListingReview)
+admin.site.register(BusinessLoan)

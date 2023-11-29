@@ -1,9 +1,9 @@
-from django.db.models import Count
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .pagination import ListingPagination
 from .permissions import IsVendorVerified
+from django.db.models import Count
+from .pagination import ListingPagination
 from .serializers import *
 from .models import *
 
@@ -17,12 +17,17 @@ class BusinessListingRequestCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(vendor_id=self.request.user)
 
+
 class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
     queryset = BusinessListing.objects.all()
     serializer_class = BusinessListingSerializer
 
     def perform_create(self, serializer):
-        return Response("Vendor request and listing created successfully.", status=status.HTTP_201_CREATED)
+        return Response(
+            "Vendor request and listing created successfully.",
+            status=status.HTTP_201_CREATED,
+        )
+
 
 class BusinessListingListCreateView(generics.ListCreateAPIView):
     """
@@ -138,3 +143,22 @@ class PopularBusinessListingCategoryListView(APIView):
 
         serializer = BusinessListingCategorySerializer(popular_categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class BusinessLoanRequestView(generics.CreateAPIView):
+    serializer_class = BusinessLoanRequestSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(vendor=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
