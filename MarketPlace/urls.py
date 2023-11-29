@@ -19,6 +19,11 @@ urlpatterns = [
         GetProductCategoriesView.as_view({'get':'get_popular_categories'}),
         name='marketplace-popular-product-categories-list'
     ),
+    re_path(
+        '^me/cart/?$',
+        GetCartView.as_view({'get':'get_user_cart'}),
+        name='user-cart-detail'
+    ),
     path('me/orders/', UserOrderListView.as_view(), name='user_order_list'),
     path('me/orders/create/', CreateOrderView.as_view(), name='create_order'),
     path('me/orders/<int:pk>/', UpdateOrderView.as_view(), name='update_order'),

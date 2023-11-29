@@ -57,13 +57,15 @@ class BusinessListingSerializer(serializers.ModelSerializer):
 
 
 class BusinessListingRequestSerializer(serializers.ModelSerializer):
+    vendor = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = BusinessListingRequest
         fields = "__all__"
 
 
 class BusinessListingSerializer(serializers.ModelSerializer):
-    vendor_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    vendor = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = BusinessListing

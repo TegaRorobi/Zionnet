@@ -65,6 +65,20 @@ class GetProductCategoriesView(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class GetCartView(viewsets.GenericViewSet):
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CartSerializer
+
+    @decorators.action(detail=True)
+    def get_user_cart(self, request, *args, **kwargs):
+        "API Viewset action to get the currently authenticated user's cart"
+        cart, created = Cart.objects.get_or_create(owner=request.user)
+        serializer = self.get_serializer(cart, many=False)
+        data = {**serializer.data, **{'new_cart':created}}
+        return Response(data, status=status.HTTP_200_OK)
+
+
 class UserOrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
 

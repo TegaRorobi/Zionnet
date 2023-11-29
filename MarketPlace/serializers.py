@@ -16,7 +16,15 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         model = ProductCategory
         fields = '__all__'
 
+class CartSerializer(serializers.ModelSerializer):
+    summary = serializers.JSONField(source='_summary')
+    class Meta:
+        model = Cart
+        fields = '__all__'
+
+
 class OrderSerializer(serializers.ModelSerializer):
+    buyer = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = Order
         fields = '__all__'

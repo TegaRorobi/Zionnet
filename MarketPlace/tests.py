@@ -82,6 +82,41 @@ class GetProductCategoriesTestCase(TestCase):
         self.assertTrue(hasattr(response, 'json'))
         self.assertIn('0', response.json()['error'])
 
+    def tearDown(self):
+        Product.objects.all().delete()
+        ProductCategory.objects.all().delete()
+        Store.objects.all().delete()
+        MarketPlace.objects.all().delete()
+        User.objects.all().delete()
+
+
+class GetCartViewTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email='test@domain.com', password='password'
+        )
+
+    def test_get_user_cart(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get('/api/me/cart/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertTrue('summary' in response.json())
+        self.assertTupleEqual(
+            (
+                response.json()['owner'],
+                response.json()['new_cart'],
+                response.json()['summary']['sub_total'],
+                response.json()['summary']['total_discount']
+            ), (1, True, 0, 0)
+        )
+
+    def tearDown(self):
+        Cart.objects.all().delete()
+        User.objects.all().delete()
+
 
 class OrderModelTestCase(TestCase):
     def setUp(self):
