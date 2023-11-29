@@ -32,7 +32,7 @@ class Store(TimestampsModel):
 
 class ProductCategory(TimestampsModel):
     marketplace = models.ForeignKey(MarketPlace, related_name='product_categories', on_delete=models.CASCADE)
-    name = models.CharField(_('store name'), max_length=255)
+    name = models.CharField(_('category name'), max_length=255)
     image = ValidatedImageField(upload_to='products/category_images', null=True, blank=True)
 
     def __str__(self) -> str:
