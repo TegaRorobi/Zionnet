@@ -1,21 +1,9 @@
-from django.db.models import Count
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
-<<<<<<< HEAD
-<<<<<<< HEAD
 from rest_framework.views import APIView
-from .models import BusinessListing, BusinessListingCategory
-from .pagination import ListingPagination
-from .serializers import BusinessListingCategorySerializer, BusinessListingSerializer
 from .permissions import IsVendorVerified
 from django.db.models import Count
-
-=======
-=======
-from rest_framework.views import APIView
->>>>>>> 3a0badbde292a94d78c70318067c67a6aa364d15
 from .pagination import ListingPagination
-from .permissions import IsVendorVerified
 from .serializers import *
 from .models import *
 
@@ -29,16 +17,17 @@ class BusinessListingRequestCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(vendor_id=self.request.user)
 
+
 class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
     queryset = BusinessListing.objects.all()
     serializer_class = BusinessListingSerializer
 
     def perform_create(self, serializer):
-        return Response("Vendor request and listing created successfully.", status=status.HTTP_201_CREATED)
-<<<<<<< HEAD
->>>>>>> 5470ee15bf4c6374679f836e89a957c3916db21c
-=======
->>>>>>> 3a0badbde292a94d78c70318067c67a6aa364d15
+        return Response(
+            "Vendor request and listing created successfully.",
+            status=status.HTTP_201_CREATED,
+        )
+
 
 class BusinessListingListCreateView(generics.ListCreateAPIView):
     """
@@ -154,6 +143,22 @@ class PopularBusinessListingCategoryListView(APIView):
 
         serializer = BusinessListingCategorySerializer(popular_categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-<<<<<<< HEAD
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+
+class BusinessLoanRequestView(generics.CreateAPIView):
+    serializer_class = BusinessLoanRequestSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(vendor=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)

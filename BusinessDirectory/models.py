@@ -1,9 +1,10 @@
 from django.db import models
 from helpers.models import TimestampsModel
 from django.core.validators import MinValueValidator, MaxValueValidator
+from jsonfield import JSONField
 from django.contrib.auth import get_user_model
-User = get_user_model()
 
+User = get_user_model()
 
 
 class BusinessListingCategory(TimestampsModel):
@@ -15,9 +16,7 @@ class BusinessListingCategory(TimestampsModel):
 
 
 class BusinessListing(TimestampsModel):
-    vendor = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="listings"
-    )
+    vendor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
     category = models.ForeignKey(
         BusinessListingCategory, on_delete=models.CASCADE, related_name="listings"
     )
@@ -34,9 +33,15 @@ class BusinessListing(TimestampsModel):
 
 
 class BusinessListingRating(TimestampsModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listing_ratings')
-    listing = models.ForeignKey(BusinessListing, on_delete=models.CASCADE, related_name='ratings')
-    value = models.PositiveSmallIntegerField(default=5, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="listing_ratings"
+    )
+    listing = models.ForeignKey(
+        BusinessListing, on_delete=models.CASCADE, related_name="ratings"
+    )
+    value = models.PositiveSmallIntegerField(
+        default=5, validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
 
 
 class BusinessListingRequest(TimestampsModel):
@@ -55,12 +60,16 @@ class BusinessListingRequest(TimestampsModel):
             ("type_2", "Type 2"),
         ],
     )
-    id_front = models.FileField(upload_to="business_listing_request_id_front", null=True, blank=True)
-    id_back = models.FileField(upload_to="business_listing_request_id_back", null=True, blank=True)
+    id_front = models.FileField(
+        upload_to="business_listing_request_id_front", null=True, blank=True
+    )
+    id_back = models.FileField(
+        upload_to="business_listing_request_id_back", null=True, blank=True
+    )
     is_approved = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Request by {self.vendor_id.first_name}"
+        return f"Request by {self.vendor.first_name}"
 
 
 class BusinessListingImage(TimestampsModel):
@@ -104,3 +113,25 @@ class BusinessListingReview(TimestampsModel):
 
     def __str__(self):
         return f"Review for {self.listing.name}"
+
+
+class BusinessLoan(TimestampsModel):
+    LOAN_TYPE_CHOICES = [
+        ("loan_type_1", "Loan Type 1"),
+        ("loan_type_2", "Loan Type 2"),
+    ]
+
+    LOAN_INTERVAL_CHOICES = [
+        ("loan_interval_1", "Loan Interval 1"),
+        ("loan_interval_2", "Loan Interval 2"),
+    ]
+
+    vendor = models.ForeignKey(User, on_delete=models.CASCADE)
+    loan_type = models.CharField(max_length=20, choices=LOAN_TYPE_CHOICES)
+    loan_interval = models.CharField(max_length=20, choices=LOAN_INTERVAL_CHOICES)
+    business_financial_details = JSONField()
+    reason = models.TextField()
+    amount = models.IntegerField()
+
+    def __str__(self):
+        return f"BusinessLoan to {self.vendor.first_name}"
