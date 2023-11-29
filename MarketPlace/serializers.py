@@ -15,3 +15,9 @@ class ProductCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductCategory
         fields = '__all__'
+
+class CartSerializer(serializers.ModelSerializer):
+    summary = serializers.JSONField(source='_summary')
+    class Meta:
+        model = Cart
+        fields = '__all__'

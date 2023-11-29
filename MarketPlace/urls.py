@@ -18,5 +18,10 @@ urlpatterns = [
         '^marketplace/(?P<pk>\d+)/products/categories/popular/?$',
         GetProductCategoriesView.as_view({'get':'get_popular_categories'}),
         name='marketplace-popular-product-categories-list'
-    )
+    ),
+    re_path(
+        '^me/cart/?$',
+        GetCartView.as_view({'get':'get_user_cart'}),
+        name='user-cart-detail'
+    ),
 ]
