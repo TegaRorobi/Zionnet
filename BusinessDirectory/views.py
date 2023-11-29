@@ -3,59 +3,90 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import BusinessListing
-from .serializers import BusinessListingSerializer
+from .models import BusinessListing, BusinessListingRating
+from .serializers import BusinessListingSerializer, BusinessListingRatingSerializer
 from django.http import Http404
 from rest_framework import status
+from django.db.models import Avg
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def top_rated_listings(request):
-    try:
-        top_rated_listings = BusinessListing.objects.order_by('-rating')[:5]
-        serializer = BusinessListingSerializer(top_rated_listings, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        error_message = str(e)
-        response = {
-            'status_message': 'error',
-            'message': 'An error occurred: ' + error_message,
-        }
-        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-@permission_classes([AllowAny])
-#Endpoint to Retrieve user listings
-def user_listings(request):
-    try:
-        user_listings = BusinessListing.objects.filter(vendor_id=request.user.id)
-        serializer = BusinessListingSerializer(user_listings, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        error_massage = str(e)
-        response = {
-            'status_massage': 'error',
-            'massage' : 'An error has occurred: ' + error_massage,
-        }
-        return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#endpoint to Retrieve top-rated listings based on average rating
+class TopRatedListingsView(generics.ListAPIView):
+    permission_classes = []
+    serializer_class = BusinessListingSerializer
     
-
-@api_view(['GET'])
-class Business_listing(generics.RetrieveAPIView):
-    def get_object(self, pk):
+    def get_queryset(self):
         try:
-            return BusinessListing.objects.get(pk=pk)
-        except BusinessListing.DoesNotExist:
-            raise Http404
+            top_rated_listings = BusinessListing.objects.annotate(avg_rating=Avg('ratings__value')).order_by('-avg_rating')[:5]
+            return top_rated_listings
+        except Exception as e:
+            error_message = str(e)
+            response = {
+                'status_message': 'error',
+                'message': 'An error occurred: ' + error_message,
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-    def get(self, request, pk, *args, **kwarge):
-        instance = self.get_object(pk)
-        serializer = BusinessListingSerializer(instance)
-        return Response(serializer.data)
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_message = str(e)
+            response = {
+                'status_message': 'error',
+                'message': 'An error occurred: ' + error_message,
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+#Endpoint to Retrieve user listings
+class UserListingsView(generics.ListAPIView):
+    serializer_class = BusinessListingSerializer
+    # permission_classes = [IsAuthenticated]
+    permission_classes = []
+
+    def get_queryset(self):
+        try:
+            return BusinessListing.objects.filter(vendor_id=self.request.user)
+        except Exception as e:
+            raise Exception(str(e))
+        # except Exception as e:
+        #     error_message = str(e)
+        #     response = {
+        #         'status_message': 'error',
+        #         'message': 'An error occurred: ' + error_message,
+        #     }
+        #     return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    # def list(self, request, *args, **kwargs):
+    #     try:
+    #         queryset = self.get_queryset()
+    #         serializer = self.get_serializer(queryset, many=True)
+    #         return Response(serializer.data)
+    #     except Exception as e:
+    #         error_message = str(e)
+    #         response = {
+    #             'status_message': 'error',
+    #             'message': 'An error occurred: ' + error_message,
+    #         }
+    #         return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    def handle_exception(self, exc):
-        if isinstance(exc, Http404):
-            return Response({"error": "Business not found"}, status=status.HTTP_404_NOT_FOUND)
-        return super().handle_exception(exc)
+
+class ListingDetailView(generics.RetrieveAPIView):
+    permission_classes = []
+    queryset = BusinessListing.objects.all()
+    serializer_class = BusinessListingSerializer
+
+    def get(self, request, *args, **kwargs):
+        try:
+            return super().get(request, *args, **kwargs)
+        except Http404:
+            return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            error_message = str(e)
+            response = {
+                'status_message': 'error',
+                'message': 'An error occurred: ' + error_message,
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

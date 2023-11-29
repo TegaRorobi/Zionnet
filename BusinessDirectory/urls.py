@@ -1,10 +1,10 @@
 from django.urls import path
 from .views import (
-    top_rated_listings, user_listings, Business_listing
+    TopRatedListingsView, UserListingsView, ListingDetailView
 )
 
 urlpatterns = [
-    path('api/listings/top_rated/', top_rated_listings, name='top-rated'),
-    path('api/me/listings/', user_listings, name='user-listings'),
-    path('api/listings/<int:pk>/', Business_listing, name='business-listing')
+    path('api/listings/top_rated/', TopRatedListingsView.as_view(), name='top-rated-listings'),
+    path('api/me/listings/', UserListingsView.as_view(), name='user-listings'),
+    path('api/listings/<int:pk>/', ListingDetailView.as_view(), name='business-listing')
 ]
