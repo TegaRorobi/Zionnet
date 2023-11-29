@@ -15,3 +15,8 @@ class ProductCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductCategory
         fields = '__all__'
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'

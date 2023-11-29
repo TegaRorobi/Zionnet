@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from django.db.models import Count
 from .serializers import *
 from .models import *
+from .permissions import IsOrderOwner
+
 
 
 class GetAllMarketPlacesView(generics.GenericAPIView):
@@ -61,3 +63,26 @@ class GetProductCategoriesView(viewsets.GenericViewSet):
         ).order_by('-product_count')
         serializer = self.get_serializer(product_categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserOrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        return Order.objects.filter(buyer=self.request.user)
+
+class CreateOrderView(generics.CreateAPIView):
+    serializer_class = OrderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(buyer=self.request.user)
+
+class UpdateOrderView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsOrderOwner]
+
+class CancelOrderView(generics.DestroyAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsOrderOwner]
