@@ -96,6 +96,24 @@ class ProductReaction(TimestampsModel):
 class Cart(TimestampsModel):
     owner = models.OneToOneField(User, related_name='cart', on_delete=models.CASCADE)
 
+    @property
+    def _summary(self):
+        cartitems = self.items.prefetch_related('product').all()
+        if not cartitems:
+            return {'sub_total':0, 'total_discount':0, 'currency':'₦'}
+        sub_total = total_discount = 0
+        for cartitem in cartitems:
+            actual_price = cartitem.product.price
+            discounted_price = cartitem.product.discounted_price
+            sub_total += (discounted_price * cartitem.quantity)
+            total_discount += (actual_price - discounted_price)
+        return {
+            # getting the currency from the first cartitem's product (#noqa)
+            'currency':self.items.get().product.currency_symbol,
+            'sub_total':sub_total,
+            'total_discount':total_discount
+        }
+
     def __str__(self) -> str:
         return 'Cart owned by ' + self.owner.__str__()
 
