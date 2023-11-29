@@ -1,24 +1,24 @@
 from django.db import models
 from helpers.models import TrackingModel
 from django.utils import timezone
+from helpers.models import TimestampsModel
 from django.core.validators import MinValueValidator, MaxValueValidator
+from jsonfield import JSONField
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
 
 
-
-class BusinessListingCategory(TrackingModel, models.Model):
+class BusinessListingCategory(TimestampsModel):
     name = models.CharField(max_length=255)
-    image = models.FileField(upload_to="business_listing_category_images")
+    image = models.ImageField(upload_to="business_listing_category_images")
 
     def __str__(self):
         return self.name
 
 
-class BusinessListing(TrackingModel, models.Model):
-    vendor_id = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="listings"
-    )
+class BusinessListing(TimestampsModel):
+    vendor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
     category = models.ForeignKey(
         BusinessListingCategory, on_delete=models.CASCADE, related_name="listings"
     )
@@ -36,14 +36,20 @@ class BusinessListing(TrackingModel, models.Model):
         return self.name
 
 
-class BusinessListingRating(TrackingModel, models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listing_ratings')
-    listing = models.ForeignKey(BusinessListing, on_delete=models.CASCADE, related_name='ratings')
-    value = models.PositiveSmallIntegerField(default=5, validators=[MinValueValidator(1), MaxValueValidator(5)])
+class BusinessListingRating(TimestampsModel):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="listing_ratings"
+    )
+    listing = models.ForeignKey(
+        BusinessListing, on_delete=models.CASCADE, related_name="ratings"
+    )
+    value = models.PositiveSmallIntegerField(
+        default=5, validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
 
 
-class BusinessListingRequest(TrackingModel, models.Model):
-    vendor_id = models.ForeignKey(
+class BusinessListingRequest(TimestampsModel):
+    vendor = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="listing_request"
     )
     listing_category = models.ForeignKey(
@@ -58,16 +64,20 @@ class BusinessListingRequest(TrackingModel, models.Model):
             ("type_2", "Type 2"),
         ],
     )
-    id_front = models.FileField(upload_to="business_listing_request_id_front")
-    id_back = models.FileField(upload_to="business_listing_request_id_back")
+    id_front = models.FileField(
+        upload_to="business_listing_request_id_front", null=True, blank=True
+    )
+    id_back = models.FileField(
+        upload_to="business_listing_request_id_back", null=True, blank=True
+    )
     is_approved = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Request by {self.vendor_id.first_name}"
+        return f"Request by {self.vendor.first_name}"
 
 
-class BusinessListingImage(TrackingModel, models.Model):
-    image = models.FileField(upload_to="business_listing_images")
+class BusinessListingImage(TimestampsModel):
+    image = models.ImageField(upload_to="business_listing_images")
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_images"
     )
@@ -76,7 +86,7 @@ class BusinessListingImage(TrackingModel, models.Model):
         return f"Image for {self.listing.name}"
 
 
-class BusinessListingFile(TrackingModel, models.Model):
+class BusinessListingFile(TimestampsModel):
     file = models.FileField(upload_to="business_listing_files")
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_files"
@@ -86,7 +96,7 @@ class BusinessListingFile(TrackingModel, models.Model):
         return f"File for {self.listing.name}"
 
 
-class BusinessListingSocials(TrackingModel, models.Model):
+class BusinessListingSocials(TimestampsModel):
     social_urls = models.CharField(max_length=255)
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_socials"
@@ -99,7 +109,7 @@ class BusinessListingSocials(TrackingModel, models.Model):
         return f"Social for {self.listing.name}"
 
 
-class BusinessListingReview(TrackingModel, models.Model):
+class BusinessListingReview(TimestampsModel):
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_reviews"
     )
@@ -113,3 +123,25 @@ class BusinessListingReview(TrackingModel, models.Model):
 
     def __str__(self):
         return f"Review for {self.listing.name}"
+
+
+class BusinessLoan(TimestampsModel):
+    LOAN_TYPE_CHOICES = [
+        ("loan_type_1", "Loan Type 1"),
+        ("loan_type_2", "Loan Type 2"),
+    ]
+
+    LOAN_INTERVAL_CHOICES = [
+        ("loan_interval_1", "Loan Interval 1"),
+        ("loan_interval_2", "Loan Interval 2"),
+    ]
+
+    vendor = models.ForeignKey(User, on_delete=models.CASCADE)
+    loan_type = models.CharField(max_length=20, choices=LOAN_TYPE_CHOICES)
+    loan_interval = models.CharField(max_length=20, choices=LOAN_INTERVAL_CHOICES)
+    business_financial_details = JSONField()
+    reason = models.TextField()
+    amount = models.IntegerField()
+
+    def __str__(self):
+        return f"BusinessLoan to {self.vendor.first_name}"

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from decouple import config as envvar
+from datetime import timedelta
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,14 +41,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
+
+    # apps
     "Account",
-    "BusinessDirectory",
-    "JobPosting",
-    "MarketPlace",
-    "ZionVest",
-    "drf_yasg",
     "authentication",
+    "BusinessDirectory",
+    "MarketPlace",
+    "JobPosting",
+    "ZionVest",
+
+    # third party libraries
+    "rest_framework",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -155,3 +160,13 @@ REST_FRAMEWORK = {
 # EMAIL_PORT = 587
 # EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
 # EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #noqa
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
+}
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
+EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)
