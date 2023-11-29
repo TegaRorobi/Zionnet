@@ -6,7 +6,7 @@
 venv/
 
 media/
-*/migrations/
+*/migrations/*
 *.sqlite3
 *pycache*
 *.pyc
