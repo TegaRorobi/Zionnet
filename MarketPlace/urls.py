@@ -39,7 +39,7 @@ urlpatterns = [
         name="store-products",
     ),
     path(
-        "me/stores/<int:store_id>/products/<int:product_id>",
+        "me/stores/<int:store_id>/products/<int:pk>/",
         StoreProductUpdateView.as_view(),
         name="store-product",
     ),

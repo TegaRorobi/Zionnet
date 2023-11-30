@@ -9,13 +9,17 @@ class IsStoreOwner(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        store_id = view.kwargs["id"]
+        store_id = view.kwargs["store_id"]
 
         if store_id:
-            store_owner = Store.objects.filter(id=store_id).values("vendor").first()
+            store_owner = (
+                Store.objects.filter(id=store_id)
+                .values_list("vendor", flat=True)
+                .first()
+            )
             return (
                 request.user.is_authenticated
                 and hasattr(request.user, "stores")
-                and request.user == store_owner["vendor"]
+                and request.user.id == store_owner
             )
         return False

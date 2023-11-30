@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, viewsets, decorators, status, permissions
 from rest_framework.response import Response
 from django.db.models import Count
@@ -119,23 +120,24 @@ class StoreProductListCreateView(generics.ListCreateAPIView):
         """API endpoint to retrieve all products within a store"""
         store_id = self.kwargs["store_id"]
 
-        return Product.objects.filter(merchant=self.request.user, store__id=store_id)
+        return Product.objects.filter(store__id=store_id)
 
     def perform_create(self, serializer):
         store_id = self.kwargs["store_id"]
-        store = Store.objects.filter(id=store_id)
+        store = get_object_or_404(Store, id=store_id)
 
         serializer.is_valid(raise_exception=True)
-        product = serializer.save(vendor=self.request.user, store=store)
+        product = serializer.save(store=store)
 
     def post(self, request, *args, **kwargs):
         """API endpoint to create product within a store"""
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+
         try:
+            serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
-        except Exception as response:
-            return response
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
@@ -148,6 +150,6 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         store_id = self.kwargs["store_id"]
-        product_id = self.kwargs["product_id"]
+        product_id = self.kwargs["pk"]
 
-        return Product.objects.filter(merchant=self.request.user, store__id=store_id)
+        return Product.objects.filter(id=product_id, store__id=store_id)
