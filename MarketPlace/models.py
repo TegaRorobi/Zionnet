@@ -95,6 +95,7 @@ class ProductReaction(TimestampsModel):
 
 class Cart(TimestampsModel):
     owner = models.OneToOneField(User, related_name='cart', on_delete=models.CASCADE)
+    delivery_address = models.CharField(_('delivery address'), max_length=255, blank=True)
 
     @property
     def _summary(self):
@@ -110,6 +111,10 @@ class Cart(TimestampsModel):
         return {
             # getting the currency from the first cartitem's product (#noqa)
             'currency':self.items.first().product.currency_symbol,
+<<<<<<< HEAD
+            'delivery_address':self.delivery_address,
+=======
+>>>>>>> d0948438add00564c3628c6a9196e741d25cf259
             'sub_total':sub_total,
             'total_discount':total_discount
         }
