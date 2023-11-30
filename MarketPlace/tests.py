@@ -1,12 +1,14 @@
-from django.test import TestCase
-from django.urls import reverse
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.contrib.auth import get_user_model
-User = get_user_model()
+from django.test import TestCase
+from django.conf import settings
+from django.urls import reverse
 from .models import *
 from PIL import Image
 import tempfile, os
+
+User = get_user_model()
 
 
 
@@ -222,7 +224,69 @@ class StoreVendorViewTestCase(TestCase):
         self.assertEqual(response.json()['is_approved'], False)
     
     def tearDown(self):
+        """
+        A little explanation: The image files' data are sent via the POST request from the 
+        authenticated client. This means that the files are read from the tempfile, and transmitted 
+        to the endpoint, automatically emptying the tempfile. This in turn means that the files are 
+        then stored in the media directory. Until I'm able to find a way to dynamically get the file 
+        locations (mainly the 'upload_to' directory of the ImageField), I just hardcoded in the url.
+        """
+        os.remove(os.path.join(settings.MEDIA_ROOT, 'store/vendors/id_files', self.image_tempfile1.name))
+        os.remove(os.path.join(settings.MEDIA_ROOT, 'store/vendors/id_files', self.image_tempfile2.name))
+        StoreVendor.objects.all().delete()
+        User.objects.all().delete()
+
+
+class StoreViewTestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create(
+            email='name@domain.com', password='testpassword'
+        )
+        self.image_tempfile1 = tempfile.NamedTemporaryFile(suffix='.jpg')
+        self.image_tempfile2 = tempfile.NamedTemporaryFile(suffix='.jpg')
+        self.image_tempfile3 = tempfile.NamedTemporaryFile(suffix='.jpg')
+        Image.new('RGB', (100, 100)).save(self.image_tempfile1)
+        Image.new('RGB', (100, 100)).save(self.image_tempfile2)
+        Image.new('RGB', (100, 100)).save(self.image_tempfile3)
+        self.image_tempfile1.seek(0)
+        self.image_tempfile2.seek(0)
+        self.image_tempfile3.seek(0)
+        self.marketplace = MarketPlace.objects.create(name='E-commerce', cover_image=self.image_tempfile1.name)
+        self.vendor = StoreVendor.objects.create(
+            user=self.user, email='vendor.email@domain.com', id_type='Voter\'s card',
+            id_front=self.image_tempfile2.name, id_back=self.image_tempfile3.name,
+            is_approved=True
+        )
+        Store.objects.create(
+            marketplace=self.marketplace, vendor=self.vendor, name='Mike\'s Kicks & Co',
+            country='Nigeria', city='Lagos', province='Province 23' 
+        )
+        Store.objects.create(
+            marketplace=self.marketplace, vendor=self.vendor, name='Samsung Stores',
+            country='Nigeria', city='Lagos', province='Province 16' 
+        )
+
+    def test_get_user_stores(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(reverse('MarketPlace:get-user-stores'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(len(response.json()), 2)
+
+
+    def tearDown(self):
+        """
+        In this case, the images are not stored in the media directory, and rather paths to 
+        the tempfiles are stored. This means that we only to delete the tempfiles.
+        """
         os.remove(self.image_tempfile1.name)
         os.remove(self.image_tempfile2.name)
+        os.remove(self.image_tempfile3.name)
+        Store.objects.all().delete()
         StoreVendor.objects.all().delete()
+        MarketPlace.objects.all().delete()
         User.objects.all().delete()
