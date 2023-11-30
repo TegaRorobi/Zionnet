@@ -5,7 +5,7 @@ from .models import (
     BusinessListingRequest,
     BusinessListingImage,
     BusinessListingFile,
-    BusinessListingSocials,
+    BusinessListingSocial,
     BusinessListingReview,
     BusinessLoan,
 )
@@ -41,9 +41,9 @@ class BusinessListingFileSerializer(serializers.ModelSerializer):
         return value
 
 
-class BusinessListingSocialsSerializer(serializers.ModelSerializer):
+class BusinessListingSocialSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BusinessListingSocials
+        model = BusinessListingSocial
         fields = "__all__"
 
 

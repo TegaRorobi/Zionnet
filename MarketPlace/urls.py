@@ -20,13 +20,18 @@ urlpatterns = [
     ),
     re_path(
         "^me/cart/?$",
-        GetCartView.as_view({"get": "get_user_cart"}),
+        CartView.as_view({"get": "get_user_cart"}),
         name="user-cart-detail",
     ),
     re_path(
         "^me/cart/items/?$",
-        GetCartView.as_view({"get": "get_user_cart_items"}),
+        CartView.as_view({"get": "get_user_cart_items"}),
         name="user-cart-items-list",
+    ),
+    re_path(
+        "^me/cart/dump/?$",
+        CartView.as_view({"delete": "delete_user_cart_items"}),
+        name="user-cart-dump",
     ),
     path(
         "me/stores/<int:store_id>/products/",
