@@ -5,6 +5,9 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from .models import *
+from PIL import Image
+import tempfile, os
+
 
 
 class GetAllMarketPlacesTestCase(TestCase):
@@ -182,4 +185,44 @@ class GetCartViewTestCase(TestCase):
         ProductCategory.objects.all().delete()
         Store.objects.all().delete()
         MarketPlace.objects.all().delete()
+        User.objects.all().delete()
+
+
+class StoreVendorViewTestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create(
+            email='test@example.com', password='testpassword'
+        )
+        self.image_tempfile1 = tempfile.NamedTemporaryFile(suffix='.jpg')
+        self.image_tempfile2 = tempfile.NamedTemporaryFile(suffix='.jpg')
+
+    def test_create_store_vendor_request(self):
+        self.client.force_authenticate(user=self.user)
+
+        Image.new('RGB', (100, 100)).save(self.image_tempfile1)
+        Image.new('RGB', (100, 100)).save(self.image_tempfile2)
+        self.image_tempfile1.seek(0)
+        self.image_tempfile2.seek(0)
+
+        response = self.client.post(
+            reverse('MarketPlace:store-vendor-request-create'), 
+            data={
+                'email': 'official.storeventures@domain.com',
+                'id_type': 'NIN',
+                'id_front': self.image_tempfile1,
+                'id_back': self.image_tempfile2
+            }, 
+            format='multipart'
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['user'], 1)
+        self.assertEqual(response.json()['is_approved'], False)
+    
+    def tearDown(self):
+        os.remove(self.image_tempfile1.name)
+        os.remove(self.image_tempfile2.name)
+        StoreVendor.objects.all().delete()
         User.objects.all().delete()
