@@ -44,3 +44,13 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
+
+
+class StoreVendorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoreVendor
+        fields = "__all__"
+        extra_kwargs = {
+            "user": {"read_only": True},
+            "is_approved": {"read_only": True},
+        }

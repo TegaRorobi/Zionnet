@@ -34,4 +34,9 @@ urlpatterns = [
         CartView.as_view({'delete':'delete_user_cart_items'}),
         name='user-cart-dump'
     ),
+    re_path(
+        '^stores/vendor/request/?$',
+        StoreVendorView.as_view({'post':'create_store_vendor_request'}),
+        name='store-vendor-request-create'
+    ),
 ]
