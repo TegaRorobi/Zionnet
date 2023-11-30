@@ -23,6 +23,9 @@ class CartSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CartItemSerializer(serializers.ModelSerializer):
+    product_details = serializers.JSONField(source='_product_details')
+    discounted_price = serializers.CharField(source='_discounted_price')
+    actual_price = serializers.CharField(source='_actual_price')
     class Meta:
         model = CartItem
         fields = '__all__'
