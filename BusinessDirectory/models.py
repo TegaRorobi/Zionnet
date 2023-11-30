@@ -128,8 +128,8 @@ class BusinessLoan(TimestampsModel):
     vendor = models.ForeignKey(User, on_delete=models.CASCADE)
     loan_type = models.CharField(max_length=20, choices=LOAN_TYPE_CHOICES)
     loan_interval = models.CharField(max_length=20, choices=LOAN_INTERVAL_CHOICES)
-    business_financial_details = models.TextField()
-    reason = models.JSONField()
+    business_financial_details = models.JSONField()
+    reason = models.TextField()
     amount = models.IntegerField()
 
     def __str__(self):
