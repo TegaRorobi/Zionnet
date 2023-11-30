@@ -120,6 +120,18 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
 
+class PopularBusinessListingView(APIView):
+    def get(self, request, format=None):
+        """
+        Retrieve popular business listings
+        popularity is based on the number of ratings
+        """
+        popular_businesses = BusinessListingRating.objects.values(
+            "listing").annotate(num_popular_listings=Count("listing")
+            ).order_by("-num_popular_listings")
+
+        serializer = BusinessListingSerializer(popular_businesses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class BusinessListingCategoryListView(APIView):
     def get(self, request, format=None):
