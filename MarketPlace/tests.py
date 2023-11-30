@@ -90,6 +90,7 @@ class GetProductCategoriesTestCase(TestCase):
 
 
 class GetCartViewTestCase(TestCase):
+    
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
@@ -136,6 +137,15 @@ class GetCartViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(hasattr(response, 'json'))
         self.assertEqual(len(response.json()['results']), 2)
+
+    def test_delete_user_cart_items(self):
+        self.client.force_authenticate(self.user)
+
+        CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        response = self.client.delete(reverse('MarketPlace:user-cart-dump'))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def tearDown(self):
         Cart.objects.all().delete()

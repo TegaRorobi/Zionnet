@@ -95,6 +95,7 @@ class ProductReaction(TimestampsModel):
 
 class Cart(TimestampsModel):
     owner = models.OneToOneField(User, related_name='cart', on_delete=models.CASCADE)
+    delivery_address = models.CharField(_('delivery address'), max_length=255, blank=True)
 
     @property
     def _summary(self):
@@ -109,7 +110,8 @@ class Cart(TimestampsModel):
             total_discount += (actual_price - discounted_price)
         return {
             # getting the currency from the first cartitem's product (#noqa)
-            'currency':self.items.get().product.currency_symbol,
+            'currency':self.items.first().product.currency_symbol,
+            'delivery_address':self.delivery_address,
             'sub_total':sub_total,
             'total_discount':total_discount
         }
