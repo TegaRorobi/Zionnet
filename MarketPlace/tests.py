@@ -33,23 +33,23 @@ class GetProductCategoriesTestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        user = User.objects.create_user(**{
-            'email': 'test@domain.com','password': 'password'
-        })
-        self.marketplace = MarketPlace.objects.create(**{
-            'name':'E-commerce', 'cover_image':'path/to/image.extension'
-        })
-        store = Store.objects.create(**{
-            'marketplace': self.marketplace,  'vendor': user, 'name':'Apple', 
-            'country':'US', 'city':'Chicago', 'province':'Stonetown' 
-        })
-        product_category = ProductCategory.objects.create(**{
-            'marketplace':self.marketplace, 'name':'Electronics & Gadgets'
-        })
-        Product.objects.create(**{
-            'store':store, 'merchant':user, 'category':product_category, 
-            'name':'Apple Vision Pro', 'price':3499.99
-        })
+        user = User.objects.create_user(
+            email= 'test@domain.com',password= 'password'
+        )
+        self.marketplace = MarketPlace.objects.create(
+            name='E-commerce', cover_image='path/to/image.extension'
+        )
+        store = Store.objects.create(
+            marketplace= self.marketplace,  vendor= user, name='Apple',
+            country='US', city='Chicago', province='Stonetown'
+        )
+        product_category = ProductCategory.objects.create(
+            marketplace=self.marketplace, name='Electronics & Gadgets'
+        )
+        Product.objects.create(
+            store=store, merchant=user, category=product_category,
+            name='Apple Vision Pro', price=3499.99
+        )
 
     def test_get_all_categories(self):
         ProductCategory.objects.create(**{'marketplace':self.marketplace, 'name':'Food & Health'})
@@ -67,7 +67,7 @@ class GetProductCategoriesTestCase(TestCase):
         self.assertIn('0', response.json()['error'])
 
     def test_get_popular_categories(self):
-        ProductCategory.objects.create(**{'marketplace':self.marketplace, 'name':'Food & Health'})
+        ProductCategory.objects.create(marketplace=self.marketplace, name='Food & Health')
         url = reverse('MarketPlace:marketplace-popular-product-categories-list', kwargs={'pk':1})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -98,7 +98,7 @@ class GetCartViewTestCase(TestCase):
 
     def test_get_user_cart(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/api/me/cart/')
+        response = self.client.get(reverse('MarketPlace:user-cart-detail'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(hasattr(response, 'json'))
@@ -112,6 +112,36 @@ class GetCartViewTestCase(TestCase):
             ), (1, True, 0, 0)
         )
 
+    def test_get_user_cart_items(self):
+        self.client.force_authenticate(self.user)
+        marketplace = MarketPlace.objects.create(
+            name='E-commerce', cover_image='path/to/image.extension'
+        )
+        store = Store.objects.create(
+            marketplace= marketplace,  vendor= self.user, name='Apple',
+            country='US', city='Chicago', province='Stonetown'
+        )
+        product_category = ProductCategory.objects.create(
+            marketplace=marketplace, name='Electronics & Gadgets'
+        )
+        product = Product.objects.create(
+            store=store, merchant=self.user, category=product_category,
+            name='Apple Vision Pro', quantity=10, price=3499.99
+        )
+        cart = Cart.objects.create(owner=self.user)
+        CartItem.objects.create(cart=cart, product=product, quantity=5)
+        CartItem.objects.create(cart=cart, product=product, quantity=5)
+        response = self.client.get(reverse('MarketPlace:user-cart-items-list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(len(response.json()['results']), 2)
+
     def tearDown(self):
         Cart.objects.all().delete()
+        CartItem.objects.all().delete()
+        Product.objects.all().delete()
+        ProductCategory.objects.all().delete()
+        Store.objects.all().delete()
+        MarketPlace.objects.all().delete()
         User.objects.all().delete()

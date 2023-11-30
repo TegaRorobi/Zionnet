@@ -123,7 +123,29 @@ class CartItem(TimestampsModel):
     product = models.ForeignKey(Product, related_name='cartitems', on_delete=models.CASCADE)
     quantity = models.IntegerField(_('number of products'), default=1)
 
+    @property
+    def _product_details(self):
+        product = self.product
+        try:
+            hasattr(product.cover_image, 'file')
+            return {
+                'name': product.name,
+                'cover_image': product.cover_image
+            }
+        except:
+            return {
+                'name': product.name,
+                'cover_image': None
+            }
+
+    @property
+    def _actual_price(self):
+        return self.product.price * self.quantity
     
+    @property
+    def _discounted_price(self):
+        return self.product.discounted_price * self.quantity
+
     def delete(self, *args, **kwargs): # noqa
         # return the product(s) to the shelves
         self.product.quantity += self.quantity

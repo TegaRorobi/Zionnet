@@ -24,4 +24,9 @@ urlpatterns = [
         GetCartView.as_view({'get':'get_user_cart'}),
         name='user-cart-detail'
     ),
+    re_path(
+        '^me/cart/items/?$',
+        GetCartView.as_view({'get':'get_user_cart_items'}),
+        name='user-cart-items-list'
+    ),
 ]
