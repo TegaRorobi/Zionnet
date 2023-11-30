@@ -109,7 +109,7 @@ class Cart(TimestampsModel):
             total_discount += (actual_price - discounted_price)
         return {
             # getting the currency from the first cartitem's product (#noqa)
-            'currency':self.items.get().product.currency_symbol,
+            'currency':self.items.first().product.currency_symbol,
             'sub_total':sub_total,
             'total_discount':total_discount
         }
@@ -127,12 +127,12 @@ class CartItem(TimestampsModel):
     def _product_details(self):
         product = self.product
         try:
-            hasattr(product.cover_image, 'file')
+            hasattr(product.cover_image, 'url')
             return {
                 'name': product.name,
-                'cover_image': product.cover_image
+                'cover_image': product.cover_image.url
             }
-        except:
+        except ValueError:
             return {
                 'name': product.name,
                 'cover_image': None
@@ -152,7 +152,7 @@ class CartItem(TimestampsModel):
         return super().delete(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Cart item: {self.quantity} nos of {self.product.__str__}"
+        return f"Cart item: {self.quantity} nos of '{self.product.__str__()}'"
 
 
 class Order(TimestampsModel):
