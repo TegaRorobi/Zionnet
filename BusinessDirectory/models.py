@@ -1,7 +1,6 @@
 from django.db import models
 from helpers.models import TimestampsModel
 from django.core.validators import MinValueValidator, MaxValueValidator
-from jsonfield import JSONField
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -129,7 +128,7 @@ class BusinessLoan(TimestampsModel):
     vendor = models.ForeignKey(User, on_delete=models.CASCADE)
     loan_type = models.CharField(max_length=20, choices=LOAN_TYPE_CHOICES)
     loan_interval = models.CharField(max_length=20, choices=LOAN_INTERVAL_CHOICES)
-    business_financial_details = models.TextField()
+    business_financial_details = models.JSONField()
     reason = models.TextField()
     amount = models.IntegerField()
 

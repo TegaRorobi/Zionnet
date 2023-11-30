@@ -32,3 +32,4 @@ urlpatterns = [
         name="business_loan_request",
     ),
 ]
+
