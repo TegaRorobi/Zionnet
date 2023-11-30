@@ -39,15 +39,18 @@ class GetProductCategoriesTestCase(TestCase):
         self.marketplace = MarketPlace.objects.create(
             name='E-commerce', cover_image='path/to/image.extension'
         )
+        vendor = StoreVendor.objects.create(
+            user=user, email=user.email
+        )
         store = Store.objects.create(
-            marketplace= self.marketplace,  vendor= user, name='Apple',
+            marketplace= self.marketplace,  vendor=vendor, name='Apple',
             country='US', city='Chicago', province='Stonetown'
         )
         product_category = ProductCategory.objects.create(
             marketplace=self.marketplace, name='Electronics & Gadgets'
         )
         Product.objects.create(
-            store=store, merchant=user, category=product_category,
+            store=store, category=product_category,
             name='Apple Vision Pro', price=3499.99
         )
 
@@ -99,15 +102,18 @@ class GetCartViewTestCase(TestCase):
         marketplace = MarketPlace.objects.create(
             name='E-commerce', cover_image='path/to/image.extension'
         )
+        vendor = StoreVendor.objects.create(
+            user=self.user, email=self.user.email
+        )
         store = Store.objects.create(
-            marketplace= marketplace,  vendor= self.user, name='Apple',
+            marketplace= marketplace,  vendor=vendor, name='Apple',
             country='US', city='Chicago', province='Stonetown'
         )
         product_category = ProductCategory.objects.create(
             marketplace=marketplace, name='Electronics & Gadgets'
         )
         self.product = Product.objects.create(
-            store=store, merchant=self.user, category=product_category,
+            store=store, category=product_category,
             name='Apple Vision Pro', quantity=10, price=3499.99
         )
         self.cart = Cart.objects.create(owner=self.user)
