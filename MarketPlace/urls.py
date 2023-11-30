@@ -39,4 +39,9 @@ urlpatterns = [
         StoreVendorView.as_view({'post':'create_store_vendor_request'}),
         name='store-vendor-request-create'
     ),
+    re_path(
+        '^me/stores/?$',
+        StoreView.as_view({'get':'get_user_stores'}),
+        name='get-user-stores'
+    ),
 ]
