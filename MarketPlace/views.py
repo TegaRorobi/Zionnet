@@ -73,7 +73,7 @@ class GetCartView(viewsets.GenericViewSet):
         if hasattr(self.request.user, 'cart'):
             return CartItem.objects.filter(cart=self.request.user.cart)
         return []
-    
+
     def get_serializer_class(self):
         if self.action=='get_user_cart':
             return CartSerializer
