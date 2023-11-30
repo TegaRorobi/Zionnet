@@ -149,6 +149,7 @@ class CartItem(TimestampsModel):
     def delete(self, *args, **kwargs): # noqa
         # return the product(s) to the shelves
         self.product.quantity += self.quantity
+        self.product.save()
         return super().delete(*args, **kwargs)
 
     def __str__(self) -> str:
