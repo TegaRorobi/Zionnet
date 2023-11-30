@@ -111,7 +111,10 @@ class Cart(TimestampsModel):
         return {
             # getting the currency from the first cartitem's product (#noqa)
             'currency':self.items.first().product.currency_symbol,
+<<<<<<< HEAD
             'delivery_address':self.delivery_address,
+=======
+>>>>>>> d0948438add00564c3628c6a9196e741d25cf259
             'sub_total':sub_total,
             'total_discount':total_discount
         }
@@ -129,12 +132,12 @@ class CartItem(TimestampsModel):
     def _product_details(self):
         product = self.product
         try:
-            hasattr(product.cover_image, 'file')
+            hasattr(product.cover_image, 'url')
             return {
                 'name': product.name,
-                'cover_image': product.cover_image
+                'cover_image': product.cover_image.url
             }
-        except:
+        except ValueError:
             return {
                 'name': product.name,
                 'cover_image': None
@@ -151,10 +154,11 @@ class CartItem(TimestampsModel):
     def delete(self, *args, **kwargs): # noqa
         # return the product(s) to the shelves
         self.product.quantity += self.quantity
+        self.product.save()
         return super().delete(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Cart item: {self.quantity} nos of {self.product.__str__}"
+        return f"Cart item: {self.quantity} nos of '{self.product.__str__()}'"
 
 
 class Order(TimestampsModel):

@@ -64,7 +64,7 @@ class GetProductCategoriesView(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class GetCartView(viewsets.GenericViewSet):
+class CartView(viewsets.GenericViewSet):
 
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = pagination.PaginatorGenerator()(_page_size=10)
@@ -99,3 +99,14 @@ class GetCartView(viewsets.GenericViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+
+    @decorators.action(detail=False)
+    def delete_user_cart_items(self, request, *args, **kwargs):
+        "API Viewset action to delete the currently authenticated user's cart items"
+        queryset = self.filter_queryset(self.get_queryset())
+        for cartitem in queryset:
+            cartitem.delete()
+        return Response({
+            "message":"Cart successfully cleared."
+        }, status=status.HTTP_204_NO_CONTENT)

@@ -96,8 +96,24 @@ class GetCartViewTestCase(TestCase):
         self.user = User.objects.create_user(
             email='test@domain.com', password='password'
         )
+        marketplace = MarketPlace.objects.create(
+            name='E-commerce', cover_image='path/to/image.extension'
+        )
+        store = Store.objects.create(
+            marketplace= marketplace,  vendor= self.user, name='Apple',
+            country='US', city='Chicago', province='Stonetown'
+        )
+        product_category = ProductCategory.objects.create(
+            marketplace=marketplace, name='Electronics & Gadgets'
+        )
+        self.product = Product.objects.create(
+            store=store, merchant=self.user, category=product_category,
+            name='Apple Vision Pro', quantity=10, price=3499.99
+        )
+        self.cart = Cart.objects.create(owner=self.user)
 
-    def test_get_user_cart(self):
+    def test_get_user_cart_when_empty(self):
+        Cart.objects.all().delete()
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse('MarketPlace:user-cart-detail'))
 
@@ -113,25 +129,31 @@ class GetCartViewTestCase(TestCase):
             ), (1, True, 0, 0)
         )
 
+    def test_get_user_cart_when_not_empty(self):
+        self.client.force_authenticate(user=self.user)
+
+        CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        response = self.client.get(reverse('MarketPlace:user-cart-detail'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertTrue('summary' in response.json())
+        self.assertTupleEqual(
+            (
+                response.json()['owner'], response.json()['new_cart'], 
+                response.json()['summary']['sub_total'], response.json()['summary']['total_discount']
+            ), 
+            (
+                1, False, round(self.product.discounted_price*5, 2), 
+                round((self.product.price-self.product.discounted_price)*5, 2)
+            )
+        )
+
     def test_get_user_cart_items(self):
         self.client.force_authenticate(self.user)
-        marketplace = MarketPlace.objects.create(
-            name='E-commerce', cover_image='path/to/image.extension'
-        )
-        store = Store.objects.create(
-            marketplace= marketplace,  vendor= self.user, name='Apple',
-            country='US', city='Chicago', province='Stonetown'
-        )
-        product_category = ProductCategory.objects.create(
-            marketplace=marketplace, name='Electronics & Gadgets'
-        )
-        product = Product.objects.create(
-            store=store, merchant=self.user, category=product_category,
-            name='Apple Vision Pro', quantity=10, price=3499.99
-        )
-        cart = Cart.objects.create(owner=self.user)
-        CartItem.objects.create(cart=cart, product=product, quantity=5)
-        CartItem.objects.create(cart=cart, product=product, quantity=5)
+        
+        CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
         response = self.client.get(reverse('MarketPlace:user-cart-items-list'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

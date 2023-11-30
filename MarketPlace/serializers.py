@@ -32,8 +32,8 @@ class CartSerializer(serializers.ModelSerializer):
 
 class CartItemSerializer(serializers.ModelSerializer):
     product_details = serializers.JSONField(source="_product_details")
-    discounted_price = serializers.CharField(source="_discounted_price")
-    actual_price = serializers.CharField(source="_actual_price")
+    discounted_price = serializers.DecimalField(source="_discounted_price", max_digits=20, decimal_places=2)
+    actual_price = serializers.DecimalField(source="_actual_price", max_digits=20, decimal_places=2)
 
     class Meta:
         model = CartItem
