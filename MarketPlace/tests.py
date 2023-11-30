@@ -139,4 +139,9 @@ class GetCartViewTestCase(TestCase):
 
     def tearDown(self):
         Cart.objects.all().delete()
+        CartItem.objects.all().delete()
+        Product.objects.all().delete()
+        ProductCategory.objects.all().delete()
+        Store.objects.all().delete()
+        MarketPlace.objects.all().delete()
         User.objects.all().delete()
