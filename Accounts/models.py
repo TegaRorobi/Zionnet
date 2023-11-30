@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.db import models
+from django.utils.translation import gettext_lazy as _
 from helpers.models import TimestampsModel
+from django.db import models
 
 
 class CustomUserManager(BaseUserManager):
@@ -20,13 +21,13 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin, TimestampsModel):
-    email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=30, blank=True)
-    last_name = models.CharField(max_length=30, blank=True)
-    country = models.CharField(max_length=50, blank=True)
-    phone_number = models.CharField(max_length=15, blank=True)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    email = models.EmailField(_('email address'), unique=True)
+    first_name = models.CharField(_('first name'), max_length=30, blank=True)
+    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    country = models.CharField(_('country'), max_length=50, blank=True)
+    phone_number = models.CharField(_('phone number'), max_length=15, blank=True)
+    is_active = models.BooleanField(_('active'), default=True)
+    is_staff = models.BooleanField(_('staff status'), default=False)
 
     objects = CustomUserManager()
 

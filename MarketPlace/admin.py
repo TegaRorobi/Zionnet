@@ -19,7 +19,11 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     model = Product
-    list_display = 'name', 'merchant', 'category', 'store', 'price'
+    list_display = 'name', '_vendor', 'category', 'store', 'price'
+
+    @admin.display()
+    def _vendor(self, obj):
+        return self.vendor.__str__()
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):

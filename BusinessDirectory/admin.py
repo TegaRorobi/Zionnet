@@ -6,7 +6,7 @@ from .models import (
     BusinessListingRequest,
     BusinessListingImage,
     BusinessListingFile,
-    BusinessListingSocials,
+    BusinessListingSocial,
     BusinessListingReview,
     BusinessLoan,
     BusinessListingRating,
@@ -23,8 +23,8 @@ class BusinessListingFileInline(admin.TabularInline):
     extra = 1
 
 
-class BusinessListingSocialsInline(admin.TabularInline):
-    model = BusinessListingSocials
+class BusinessListingSocialInline(admin.TabularInline):
+    model = BusinessListingSocial
     extra = 1
 
 
@@ -32,7 +32,7 @@ class BusinessListingAdmin(admin.ModelAdmin):
     inlines = [
         BusinessListingImageInline,
         BusinessListingFileInline,
-        BusinessListingSocialsInline,
+        BusinessListingSocialInline,
     ]
 
 
@@ -42,7 +42,7 @@ admin.site.register(BusinessListingCategory)
 admin.site.register(BusinessListingRequest)
 admin.site.register(BusinessListingImage)
 admin.site.register(BusinessListingFile)
-admin.site.register(BusinessListingSocials)
+admin.site.register(BusinessListingSocial)
 admin.site.register(BusinessListingReview)
 admin.site.register(BusinessLoan)
 admin.site.register(BusinessListingRating)

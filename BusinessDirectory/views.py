@@ -15,7 +15,7 @@ class BusinessListingRequestCreateView(generics.CreateAPIView):
     serializer_class = BusinessListingRequestSerializer
 
     def perform_create(self, serializer):
-        serializer.save(vendor_id=self.request.user)
+        serializer.save(vendor=self.request.user)
 
 
 class BusinessListingVendorRequestCreateView(generics.CreateAPIView):

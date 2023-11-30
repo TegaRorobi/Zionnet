@@ -31,7 +31,7 @@ DEBUG = envvar("DEBUG", cast=bool, default=True)
 split_env_str = lambda v: [s.strip() for s in v.split(",")]
 ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str)
 
-AUTH_USER_MODEL = "authentication.CustomUser"
+AUTH_USER_MODEL = "Accounts.CustomUser"
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,15 +43,15 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     # apps
-    "Account",
-    "authentication",
-    "BusinessDirectory",
-    "MarketPlace",
-    "JobPosting",
-    "ZionVest",
+    "Accounts.apps.AccountsConfig",
+    "BusinessDirectory.apps.BusinessdirectoryConfig",
+    "MarketPlace.apps.MarketplaceConfig",
+    "JobPosting.apps.JobpostingConfig",
+    "ZionVest.apps.ZionvestConfig",
 
     # third party libraries
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
 ]
 
