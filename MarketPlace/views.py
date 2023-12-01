@@ -7,6 +7,8 @@ from django.db.models import Count
 from helpers import pagination
 from .serializers import *
 from .models import *
+from .permissions import IsOrderOwner
+
 
 
 class GetAllMarketPlacesView(generics.GenericAPIView):
@@ -125,3 +127,26 @@ class StoreVendorView(viewsets.GenericViewSet, mixins.CreateModelMixin):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, headers=headers, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserOrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        return Order.objects.filter(buyer=self.request.user)
+
+class CreateOrderView(generics.CreateAPIView):
+    serializer_class = OrderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(buyer=self.request.user)
+
+class UpdateOrderView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsOrderOwner]
+
+class CancelOrderView(generics.DestroyAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsOrderOwner]
