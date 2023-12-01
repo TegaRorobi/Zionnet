@@ -263,30 +263,80 @@ class StoreViewTestCase(TestCase):
         self.image_tempfile1.seek(0)
         self.image_tempfile2.seek(0)
         self.image_tempfile3.seek(0)
-        marketplace = MarketPlace.objects.create(name='E-commerce', cover_image=self.image_tempfile1.name)
+        self.marketplace = MarketPlace.objects.create(name='E-commerce', cover_image=self.image_tempfile1.name)
         vendor = StoreVendor.objects.create(
             user=self.user, email='vendor.email@domain.com', id_type='Voter\'s card',
             id_front=self.image_tempfile2.name, id_back=self.image_tempfile3.name,
             is_approved=True
         )
         Store.objects.create(
-            marketplace=marketplace, vendor=vendor, name='Mike\'s Kicks & Co',
+            marketplace=self.marketplace, vendor=vendor, name='Mike\'s Kicks & Co',
             country='Nigeria', city='Lagos', province='Province 23' 
         )
         Store.objects.create(
-            marketplace=marketplace, vendor=vendor, name='Samsung Stores',
+            marketplace=self.marketplace, vendor=vendor, name='Samsung Stores',
             country='Nigeria', city='Lagos', province='Province 16' 
         )
 
     def test_get_user_stores(self):
         self.client.force_authenticate(user=self.user)
 
-        response = self.client.get(reverse('MarketPlace:get-user-stores'))
+        response = self.client.get(reverse('MarketPlace:store-list-create'))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(hasattr(response, 'json'))
         self.assertEqual(len(response.json()), 2)
+    
+    def test_create_store(self):
+        self.client.force_authenticate(user=self.user)
 
+        response = self.client.post(
+            reverse('MarketPlace:store-list-create'),
+            data={
+                'marketplace': self.marketplace.id,
+                'name':'Apple Stores',
+                'country':'Nigeria', 
+                'city':'Lagos', 
+                'province':'Province 3' 
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['name'], 'Apple Stores')
+        self.assertEqual(len(self.user.store_vendor_profile.stores.all()), 3)
+
+    def test_retrieve_store(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            reverse('MarketPlace:store-retrieve-update-delete', kwargs={'pk':1})
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['id'], 1)
+        self.assertEqual(response.json()['name'], 'Mike\'s Kicks & Co')
+
+    def test_partial_update_store(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.patch(
+            reverse('MarketPlace:store-retrieve-update-delete', kwargs={'pk':1}),
+            data={'name': 'Mike\'s Kicks & Co (updated)'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['id'], 1)
+        self.assertEqual(response.json()['name'], 'Mike\'s Kicks & Co (updated)')
+    
+    def test_delete_store(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.delete(
+            reverse('MarketPlace:store-retrieve-update-delete', kwargs={'pk':1})
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(len(self.user.store_vendor_profile.stores.all()), 1)
 
     def tearDown(self):
         """
