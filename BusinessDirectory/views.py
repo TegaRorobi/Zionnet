@@ -107,18 +107,14 @@ class BusinessListingRequestCreateView(generics.CreateAPIView):
     serializer_class = BusinessListingRequestSerializer
 
     def perform_create(self, serializer):
-        serializer.save(vendor_id=self.request.user)
+        serializer.save(vendor=self.request.user)
 
 
 class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
-    queryset = BusinessListing.objects.all()
-    serializer_class = BusinessListingSerializer
+    serializer_class = BusinessListingVendorSerializer
 
     def perform_create(self, serializer):
-        return Response(
-            "Vendor request and listing created successfully.",
-            status=status.HTTP_201_CREATED,
-        )
+        serializer.save(user=self.request.user, is_approved=False)
 
 
 class BusinessListingListCreateView(generics.ListCreateAPIView):

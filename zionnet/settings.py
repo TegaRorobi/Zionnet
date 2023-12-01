@@ -23,15 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = envvar("SECRET_KEY", cast=str)
+SECRET_KEY = envvar("SECRET_KEY", cast=str, default='django_secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = envvar("DEBUG", cast=bool, default=True)
 
 split_env_str = lambda v: [s.strip() for s in v.split(",")]
-ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str)
+ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str, default="127.0.0.1")
 
-AUTH_USER_MODEL = "authentication.CustomUser"
+AUTH_USER_MODEL = "Accounts.CustomUser"
 # Application definition
 
 INSTALLED_APPS = [
@@ -41,17 +41,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # apps
-    "Account",
-    "authentication",
-    "BusinessDirectory",
-    "MarketPlace",
-    "JobPosting",
-    "ZionVest",
-
+    "Accounts.apps.AccountsConfig",
+    "BusinessDirectory.apps.BusinessdirectoryConfig",
+    "MarketPlace.apps.MarketplaceConfig",
+    "JobPosting.apps.JobpostingConfig",
+    "ZionVest.apps.ZionvestConfig",
     # third party libraries
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
 ]
 
@@ -161,12 +159,12 @@ REST_FRAMEWORK = {
 # EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
 # EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #noqa
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),  # noqa
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
-# EMAIL_USE_TLS = True
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
-# EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)
+EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str, default='***')
+EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str, default='***')

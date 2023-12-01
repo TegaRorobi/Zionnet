@@ -21,14 +21,25 @@ class BusinessListingSerializer(serializers.ModelSerializer):
         return avg_rating if avg_rating is not None else 0
 from .models import (
     BusinessListingCategory,
+    BusinessListingVendor,
     BusinessListing,
     BusinessListingRequest,
     BusinessListingImage,
     BusinessListingFile,
-    BusinessListingSocials,
+    BusinessListingSocial,
     BusinessListingReview,
     BusinessLoan,
 )
+
+
+class BusinessListingVendorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusinessListingVendor
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True},
+            'is_approved': {'read_only': True},
+        }
 
 
 class BusinessListingRequestSerializer(serializers.ModelSerializer):
@@ -61,9 +72,9 @@ class BusinessListingFileSerializer(serializers.ModelSerializer):
         return value
 
 
-class BusinessListingSocialsSerializer(serializers.ModelSerializer):
+class BusinessListingSocialSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BusinessListingSocials
+        model = BusinessListingSocial
         fields = "__all__"
 
 
@@ -77,13 +88,15 @@ class BusinessListingSerializer(serializers.ModelSerializer):
 
 
 class BusinessListingRequestSerializer(serializers.ModelSerializer):
+    vendor = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = BusinessListingRequest
         fields = "__all__"
 
 
 class BusinessListingSerializer(serializers.ModelSerializer):
-    vendor_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    vendor = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = BusinessListing

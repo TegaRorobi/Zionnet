@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import *
 
+
 @admin.register(MarketPlace)
 class MarketplaceAdmin(admin.ModelAdmin):
     model = MarketPlace
@@ -19,7 +20,12 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     model = Product
-    list_display = 'name', 'merchant', 'category', 'store', 'price'
+    list_display = 'name', '_vendor', 'category', 'store', 'price'
+
+    @admin.display()
+    def _vendor(self, obj):
+        return self.vendor.__str__()
+
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
@@ -50,7 +56,12 @@ class CartItemAdmin(admin.ModelAdmin):
     def cart_owner_(self, obj):
         return obj.cart.owner.__str__()
 
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     model = Order
     list_display = 'buyer', 'product', 'quantity', 'status'
+
+@admin.register(StoreVendor)
+class StoreVendorAdmin(admin.ModelAdmin):
+    list_display = 'user', 'email', 'is_approved'
