@@ -41,14 +41,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # apps
     "Accounts.apps.AccountsConfig",
     "BusinessDirectory.apps.BusinessdirectoryConfig",
     "MarketPlace.apps.MarketplaceConfig",
     "JobPosting.apps.JobpostingConfig",
     "ZionVest.apps.ZionvestConfig",
-
     # third party libraries
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
@@ -156,8 +154,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #noqa
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),  # noqa
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
 EMAIL_USE_TLS = True
