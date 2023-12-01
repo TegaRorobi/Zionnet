@@ -39,6 +39,28 @@ urlpatterns = [
         StoreVendorView.as_view({'post':'create_store_vendor_request'}),
         name='store-vendor-request-create'
     ),
+    re_path(
+        '^me/stores/?$',
+        StoreView.as_view(
+            {
+                'get':'get_user_stores',
+                'post':'create_store',
+            }
+        ),
+        name='store-list-create'
+    ),
+    re_path(
+        '^me/stores/(?P<pk>\d+)/?$',
+        StoreView.as_view(
+            {
+                'get':'retrieve_store',
+                'put':'update_store',
+                'patch':'partial_update_store',
+                'delete':'destroy_store'
+            }
+        ),
+        name='store-retrieve-update-delete'
+    ),
     path('me/orders/', UserOrderListView.as_view(), name='user_order_list'),
     path('me/orders/create/', CreateOrderView.as_view(), name='create_order'),
     path('me/orders/<int:pk>/', UpdateOrderView.as_view(), name='update_order'),
