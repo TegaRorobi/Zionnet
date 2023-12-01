@@ -11,8 +11,6 @@ import tempfile, os
 User = get_user_model()
 
 
-
-User = get_user_model()
 class GetAllMarketPlacesTestCase(TestCase):
 
     def setUp(self):
@@ -351,16 +349,23 @@ class StoreViewTestCase(TestCase):
         StoreVendor.objects.all().delete()
         MarketPlace.objects.all().delete()
         User.objects.all().delete()
+
+
 class OrderModelTestCase(TestCase):
     def setUp(self):
         # Create a user
         self.user = User.objects.create_user(email='testuser@example.com', password='testpassword')
 
-        # Create a marketplace, store, category, and product
+        # Create a marketplace, vendor, store, category, and product
         self.marketplace = MarketPlace.objects.create(name='Test Marketplace')
+        self.vendor = StoreVendor.objects.create(
+            user=self.user,
+            email='vendor@example.com',
+            id_type='NIN',
+        )
         self.store = Store.objects.create(
             marketplace=self.marketplace,
-            vendor=self.user,
+            vendor=self.vendor,
             name='Test Store',
             country='Test Country',
             city='Test City',
@@ -372,7 +377,6 @@ class OrderModelTestCase(TestCase):
         )
         self.product = Product.objects.create(
             store=self.store,
-            merchant=self.user,
             category=self.category,
             name='Test Product',
             quantity=10,
@@ -394,6 +398,7 @@ class OrderModelTestCase(TestCase):
         self.assertEqual(order.quantity, 2)
         self.assertEqual(order.status, 'shipped')
 
+
 class OrderAPITestCase(APITestCase):
     def setUp(self):
         # Create a user
@@ -404,9 +409,14 @@ class OrderAPITestCase(APITestCase):
 
         # Create a marketplace, store, category, and product
         self.marketplace = MarketPlace.objects.create(name='Test Marketplace')
+        self.vendor = StoreVendor.objects.create(
+            user=self.user,
+            email='vendor@example.com',
+            id_type='NIN',
+        )
         self.store = Store.objects.create(
             marketplace=self.marketplace,
-            vendor=self.user,
+            vendor=self.vendor,
             name='Test Store',
             country='Test Country',
             city='Test City',
@@ -418,7 +428,6 @@ class OrderAPITestCase(APITestCase):
         )
         self.product = Product.objects.create(
             store=self.store,
-            merchant=self.user,
             category=self.category,
             name='Test Product',
             quantity=10,
@@ -441,11 +450,18 @@ class OrderAPITestCase(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['product']['name'], 'Test Product')
+        self.assertEqual(
+            Product.objects.get(id=response.data[0]['product']).name, 'Test Product'
+        )
 
     def test_user_can_create_order(self):
         url = reverse('MarketPlace:create_order')
-        data = {'buyer': self.user.id, 'product': self.product.id, 'quantity': 1, 'status': 'shipped'}
+        data = {
+            'buyer': self.user.id, 
+            'product': self.product.id, 
+            'quantity': 1, 
+            'status': 'shipped'
+        }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -466,7 +482,10 @@ class OrderAPITestCase(APITestCase):
 
     def test_other_users_cannot_access_order(self):
         # Create a second user
-        other_user = User.objects.create_user(email='otheruser@example.com', password='testpassword')
+        other_user = User.objects.create_user(
+            email='otheruser@example.com', 
+            password='testpassword'
+        )
 
         # Log in the other user
         self.client.force_authenticate(user=other_user)
