@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from decouple import config as envvar
+from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,15 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = envvar("SECRET_KEY", cast=str)
+SECRET_KEY = envvar("SECRET_KEY", cast=str, default='django_secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = envvar("DEBUG", cast=bool, default=True)
 
 split_env_str = lambda v: [s.strip() for s in v.split(",")]
-ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str)
+ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str, default="127.0.0.1")
 
-
+AUTH_USER_MODEL = "Accounts.CustomUser"
 # Application definition
 
 INSTALLED_APPS = [
@@ -39,12 +41,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    # apps
+    "Accounts.apps.AccountsConfig",
+    "BusinessDirectory.apps.BusinessdirectoryConfig",
+    "MarketPlace.apps.MarketplaceConfig",
+    "JobPosting.apps.JobpostingConfig",
+    "ZionVest.apps.ZionvestConfig",
+
+    # third party libraries
     "rest_framework",
-    "Account",
-    "BusinessDirectory",
-    "JobPosting",
-    "MarketPlace",
-    "ZionVest",
+    "rest_framework_simplejwt.token_blacklist",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -77,6 +85,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "zionnet.wsgi.application"
 
+# Media settings
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -129,3 +140,28 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    }
+}
+
+REST_FRAMEWORK = {
+    "NON_FIELD_ERRORS_KEY": "error",
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #noqa
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
+}
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str, default='***')
+EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str, default='***')
