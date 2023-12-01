@@ -13,6 +13,9 @@ class BusinessListingCategory(TimestampsModel):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural="Business listing categories"
+
 
 class BusinessListing(TimestampsModel):
     vendor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
@@ -91,14 +94,17 @@ class BusinessListingFile(TimestampsModel):
         return f"File for {self.listing.name}"
 
 
-class BusinessListingSocials(TimestampsModel):
-    social_urls = models.CharField(max_length=255)
+class BusinessListingSocial(TimestampsModel):
+    social_url = models.CharField(max_length=255)
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_socials"
     )
 
     def __str__(self):
         return f"Social for {self.listing.name}"
+    
+    class Meta:
+        verbose_name_plural = "Business listing socials"
 
 
 class BusinessListingReview(TimestampsModel):
@@ -128,7 +134,7 @@ class BusinessLoan(TimestampsModel):
     vendor = models.ForeignKey(User, on_delete=models.CASCADE)
     loan_type = models.CharField(max_length=20, choices=LOAN_TYPE_CHOICES)
     loan_interval = models.CharField(max_length=20, choices=LOAN_INTERVAL_CHOICES)
-    business_financial_details = models.TextField()
+    business_financial_details = models.JSONField()
     reason = models.TextField()
     amount = models.IntegerField()
 

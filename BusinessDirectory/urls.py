@@ -31,7 +31,7 @@ urlpatterns = [
         BusinessLoanRequestView.as_view(),
         name="business_loan_request",
     ),
-    path(
+       path(
         "listings/popular/",
         PopularBusinessListingView.as_view(),
         name="popular-business-listings",
