@@ -2,7 +2,7 @@
 from rest_framework import (
     generics, viewsets, mixins, decorators, status, permissions
 )
-from . import permissions as custompermissions
+from .permissions import IsApprovedStoreVendor
 from rest_framework.response import Response
 from django.db.models import Count
 from helpers import pagination
@@ -132,7 +132,7 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     "API Viewset to perform CRUD operations on the store(s) of the currently authenticated user"
 
-    permission_classes = [custompermissions.IsApprovedStoreVendor]
+    permission_classes = [IsApprovedStoreVendor]
     serializer_class = StoreSerializer
 
     def get_queryset(self):
@@ -146,7 +146,6 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
     @decorators.action(detail=True)
     def create_store(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -156,3 +155,8 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
             return Response(serializer.data, headers=headers, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @decorators.action(detail=True)
+    def retrieve_store(self, request, *args, **kwargs):
+        store = self.get_object()
+        serializer = self.get_serializer(store, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)

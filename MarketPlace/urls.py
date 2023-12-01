@@ -49,4 +49,9 @@ urlpatterns = [
         StoreView.as_view({'post':'create_store'}),
         name='create-store'
     ),
+    re_path(
+        '^me/stores/(?P<pk>\d+)/?$',
+        StoreView.as_view({'get':'retrieve_store'}),
+        name='retrieve-store'
+    ),
 ]
