@@ -165,8 +165,8 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
 }
 
-EMAIL_USE_TLS = True
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
-EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)
+# EMAIL_USE_TLS = True
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
+# EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)

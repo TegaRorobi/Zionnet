@@ -1,5 +1,5 @@
 from django.db import models
-from helpers.models import TrackingModel
+# from helpers.models import TrackingModel
 from django.utils import timezone
 from helpers.models import TimestampsModel
 from django.core.validators import MinValueValidator, MaxValueValidator
