@@ -54,3 +54,9 @@ class StoreVendorSerializer(serializers.ModelSerializer):
             "user": {"read_only": True},
             "is_approved": {"read_only": True},
         }
+
+class OrderSerializer(serializers.ModelSerializer):
+    buyer = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    class Meta:
+        model = Order
+        fields = '__all__'

@@ -48,4 +48,8 @@ urlpatterns = [
         StoreVendorView.as_view({"post": "create_store_vendor_request"}),
         name="store-vendor-request-create",
     ),
+    path("me/orders/", UserOrderListView.as_view(), name="user_order_list"),
+    path("me/orders/create/", CreateOrderView.as_view(), name="create_order"),
+    path("me/orders/<int:pk>/", UpdateOrderView.as_view(), name="update_order"),
+    path("me/orders/<int:pk>/cancel/", CancelOrderView.as_view(), name="cancel_order"),
 ]
