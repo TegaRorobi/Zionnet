@@ -227,12 +227,22 @@ class StoreVendorViewTestCase(TestCase):
         """
         A little explanation: The image files' data are sent via the POST request from the 
         authenticated client. This means that the files are read from the tempfile, and transmitted 
-        to the endpoint, automatically emptying the tempfile. This in turn means that the files are 
-        then stored in the media directory. Until I'm able to find a way to dynamically get the file 
+        to the endpoint, automatically emptying the tempfile. This in turn means that the files are then 
+        stored in the settings.MEDIA_ROOT directory. Until I'm able to find a way to dynamically get the file 
         locations (mainly the 'upload_to' directory of the ImageField), I just hardcoded in the url.
         """
-        os.remove(os.path.join(settings.MEDIA_ROOT, 'store/vendors/id_files', self.image_tempfile1.name))
-        os.remove(os.path.join(settings.MEDIA_ROOT, 'store/vendors/id_files', self.image_tempfile2.name))
+        os.remove(
+            os.path.join(
+                settings.MEDIA_ROOT, 'store/vendors/id_files',
+                os.path.split(self.image_tempfile1.name)[-1]
+            )
+        )
+        os.remove(
+            os.path.join(
+                settings.MEDIA_ROOT, 'store/vendors/id_files',
+                os.path.split(self.image_tempfile2.name)[-1]
+            )
+        )
         StoreVendor.objects.all().delete()
         User.objects.all().delete()
 
@@ -253,18 +263,18 @@ class StoreViewTestCase(TestCase):
         self.image_tempfile1.seek(0)
         self.image_tempfile2.seek(0)
         self.image_tempfile3.seek(0)
-        self.marketplace = MarketPlace.objects.create(name='E-commerce', cover_image=self.image_tempfile1.name)
-        self.vendor = StoreVendor.objects.create(
+        marketplace = MarketPlace.objects.create(name='E-commerce', cover_image=self.image_tempfile1.name)
+        vendor = StoreVendor.objects.create(
             user=self.user, email='vendor.email@domain.com', id_type='Voter\'s card',
             id_front=self.image_tempfile2.name, id_back=self.image_tempfile3.name,
             is_approved=True
         )
         Store.objects.create(
-            marketplace=self.marketplace, vendor=self.vendor, name='Mike\'s Kicks & Co',
+            marketplace=marketplace, vendor=vendor, name='Mike\'s Kicks & Co',
             country='Nigeria', city='Lagos', province='Province 23' 
         )
         Store.objects.create(
-            marketplace=self.marketplace, vendor=self.vendor, name='Samsung Stores',
+            marketplace=marketplace, vendor=vendor, name='Samsung Stores',
             country='Nigeria', city='Lagos', province='Province 16' 
         )
 
