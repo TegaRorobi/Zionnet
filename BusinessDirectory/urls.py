@@ -17,12 +17,12 @@ urlpatterns = [
         name="business_listing_vendor_request",
     ),
     path(
-        "listing-categories/",
+        "categories/",
         BusinessListingCategoryListView.as_view(),
         name="business-categories",
     ),
     path(
-        "listing-categories/popular/",
+        "categories/popular/",
         PopularBusinessListingCategoryListView.as_view(),
         name="popular-category-list",
     ),
@@ -32,3 +32,4 @@ urlpatterns = [
         name="business_loan_request",
     ),
 ]
+
