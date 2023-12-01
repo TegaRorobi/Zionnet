@@ -128,7 +128,7 @@ class StoreVendorView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class StoreView(viewsets.GenericViewSet):
+class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     "API Viewset to perform CRUD operations on the store(s) of the currently authenticated user"
 
@@ -145,4 +145,14 @@ class StoreView(viewsets.GenericViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    @decorators.action(detail=True)
+    def create_store(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(vendor=request.user.store_vendor_profile)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, headers=headers, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
