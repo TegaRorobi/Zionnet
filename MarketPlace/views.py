@@ -8,6 +8,8 @@ from django.db.models import Count
 from helpers import pagination
 from .serializers import *
 from .models import *
+from .permissions import IsOrderOwner
+
 
 
 class GetAllMarketPlacesView(generics.GenericAPIView):
@@ -185,3 +187,24 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
             {'message': 'Store successfully deleted.'}, 
             status=status.HTTP_204_NO_CONTENT
         )
+class UserOrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        return Order.objects.filter(buyer=self.request.user)
+
+class CreateOrderView(generics.CreateAPIView):
+    serializer_class = OrderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(buyer=self.request.user)
+
+class UpdateOrderView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsOrderOwner]
+
+class CancelOrderView(generics.DestroyAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsOrderOwner]
