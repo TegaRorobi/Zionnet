@@ -127,8 +127,8 @@ class PopularBusinessListingView(APIView):
         popularity is based on the number of ratings
         """
         popular_businesses = BusinessListingRating.objects.values(
-            "listing").annotate(num_popular_listings=Count("listing")
-            ).order_by("-num_popular_listings")
+            "listing").annotate(avg_rating=Avg("value")
+            ).order_by("-avg_rating")
 
         serializer = BusinessListingSerializer(popular_businesses, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
