@@ -5,6 +5,9 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from .models import *
+from PIL import Image
+import tempfile, os
+
 
 
 class GetAllMarketPlacesTestCase(TestCase):
@@ -39,15 +42,18 @@ class GetProductCategoriesTestCase(TestCase):
         self.marketplace = MarketPlace.objects.create(
             name='E-commerce', cover_image='path/to/image.extension'
         )
+        vendor = StoreVendor.objects.create(
+            user=user, email=user.email
+        )
         store = Store.objects.create(
-            marketplace= self.marketplace,  vendor= user, name='Apple',
+            marketplace= self.marketplace,  vendor=vendor, name='Apple',
             country='US', city='Chicago', province='Stonetown'
         )
         product_category = ProductCategory.objects.create(
             marketplace=self.marketplace, name='Electronics & Gadgets'
         )
         Product.objects.create(
-            store=store, merchant=user, category=product_category,
+            store=store, category=product_category,
             name='Apple Vision Pro', price=3499.99
         )
 
@@ -99,15 +105,18 @@ class GetCartViewTestCase(TestCase):
         marketplace = MarketPlace.objects.create(
             name='E-commerce', cover_image='path/to/image.extension'
         )
+        vendor = StoreVendor.objects.create(
+            user=self.user, email=self.user.email
+        )
         store = Store.objects.create(
-            marketplace= marketplace,  vendor= self.user, name='Apple',
+            marketplace= marketplace,  vendor=vendor, name='Apple',
             country='US', city='Chicago', province='Stonetown'
         )
         product_category = ProductCategory.objects.create(
             marketplace=marketplace, name='Electronics & Gadgets'
         )
         self.product = Product.objects.create(
-            store=store, merchant=self.user, category=product_category,
+            store=store, category=product_category,
             name='Apple Vision Pro', quantity=10, price=3499.99
         )
         self.cart = Cart.objects.create(owner=self.user)
@@ -176,4 +185,44 @@ class GetCartViewTestCase(TestCase):
         ProductCategory.objects.all().delete()
         Store.objects.all().delete()
         MarketPlace.objects.all().delete()
+        User.objects.all().delete()
+
+
+class StoreVendorViewTestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create(
+            email='test@example.com', password='testpassword'
+        )
+        self.image_tempfile1 = tempfile.NamedTemporaryFile(suffix='.jpg')
+        self.image_tempfile2 = tempfile.NamedTemporaryFile(suffix='.jpg')
+
+    def test_create_store_vendor_request(self):
+        self.client.force_authenticate(user=self.user)
+
+        Image.new('RGB', (100, 100)).save(self.image_tempfile1)
+        Image.new('RGB', (100, 100)).save(self.image_tempfile2)
+        self.image_tempfile1.seek(0)
+        self.image_tempfile2.seek(0)
+
+        response = self.client.post(
+            reverse('MarketPlace:store-vendor-request-create'), 
+            data={
+                'email': 'official.storeventures@domain.com',
+                'id_type': 'NIN',
+                'id_front': self.image_tempfile1,
+                'id_back': self.image_tempfile2
+            }, 
+            format='multipart'
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['user'], 1)
+        self.assertEqual(response.json()['is_approved'], False)
+    
+    def tearDown(self):
+        os.remove(self.image_tempfile1.name)
+        os.remove(self.image_tempfile2.name)
+        StoreVendor.objects.all().delete()
         User.objects.all().delete()

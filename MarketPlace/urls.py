@@ -43,4 +43,9 @@ urlpatterns = [
         StoreProductUpdateView.as_view(),
         name="store-product",
     ),
+    re_path(
+        "^stores/vendor/request/?$",
+        StoreVendorView.as_view({"post": "create_store_vendor_request"}),
+        name="store-vendor-request-create",
+    ),
 ]

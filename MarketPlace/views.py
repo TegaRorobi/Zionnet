@@ -1,5 +1,4 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, viewsets, decorators, status, permissions
+from rest_framework import generics, viewsets, mixins, decorators, status, permissions
 from rest_framework.response import Response
 from django.db.models import Count
 from .permissions import IsStoreOwner
@@ -153,3 +152,19 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
         product_id = self.kwargs["pk"]
 
         return Product.objects.filter(id=product_id, store__id=store_id)
+
+
+class StoreVendorView(viewsets.GenericViewSet, mixins.CreateModelMixin):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = StoreVendorSerializer
+
+    @decorators.action(detail=True)
+    def create_store_vendor_request(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, is_approved=False)
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                serializer.data, headers=headers, status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
