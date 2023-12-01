@@ -14,9 +14,27 @@ class MarketPlace(TimestampsModel):
         return self.name
 
 
+class StoreVendor(TimestampsModel):
+    ID_TYPE_CHOICES = [
+        ('NIN', 'NIN'),
+        ("Driver's License", "Driver's License"),
+        ("Voter's Card", "Voter's Card")
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='store_vendor_profile')
+    email = models.EmailField(_('vendor email address'))
+    id_type = models.CharField(_('id type'), max_length=30, choices=ID_TYPE_CHOICES)
+    id_front = models.FileField(_('id front'), upload_to='store/vendors/id_files', null=True, blank=True)
+    id_back = models.FileField(_('id back'), upload_to='store/vendors/id_files', null=True, blank=True)
+    request_info = models.CharField(_('additional request information'), max_length=400, null=True, blank=True)
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return 'Store Vendor: ' + self.email.__str__()
+
+
 class Store(TimestampsModel):
     marketplace = models.ForeignKey(MarketPlace, related_name='stores', on_delete=models.PROTECT)
-    vendor = models.ForeignKey(User, verbose_name=_('store vendor'), related_name='stores', on_delete=models.CASCADE)
+    vendor = models.ForeignKey(StoreVendor, verbose_name=_('store vendor'), related_name='stores', on_delete=models.CASCADE)
     name = models.CharField(_('store name'), max_length=255)
     description = models.TextField(_('store description'), null=True, blank=True)
     logo = ValidatedImageField(upload_to='store/logos', null=True, blank=True)
@@ -41,7 +59,6 @@ class ProductCategory(TimestampsModel):
 
 class Product(TimestampsModel):
     store = models.ForeignKey(Store, related_name='products', on_delete=models.CASCADE)
-    merchant = models.ForeignKey(User, related_name='store_products', on_delete=models.CASCADE)
     category = models.ForeignKey(ProductCategory, related_name='products', on_delete=models.CASCADE)
     name = models.CharField(_('product name'), max_length=255)
     description = models.TextField(_('product description'), null=True, blank=True)
@@ -95,6 +112,7 @@ class ProductReaction(TimestampsModel):
 
 class Cart(TimestampsModel):
     owner = models.OneToOneField(User, related_name='cart', on_delete=models.CASCADE)
+    delivery_address = models.CharField(_('delivery address'), max_length=255, blank=True)
 
     @property
     def _summary(self):
@@ -109,7 +127,8 @@ class Cart(TimestampsModel):
             total_discount += (actual_price - discounted_price)
         return {
             # getting the currency from the first cartitem's product (#noqa)
-            'currency':self.items.get().product.currency_symbol,
+            'currency':self.items.first().product.currency_symbol,
+            'delivery_address':self.delivery_address,
             'sub_total':sub_total,
             'total_discount':total_discount
         }
@@ -127,12 +146,12 @@ class CartItem(TimestampsModel):
     def _product_details(self):
         product = self.product
         try:
-            hasattr(product.cover_image, 'file')
+            hasattr(product.cover_image, 'url')
             return {
                 'name': product.name,
-                'cover_image': product.cover_image
+                'cover_image': product.cover_image.url
             }
-        except:
+        except ValueError:
             return {
                 'name': product.name,
                 'cover_image': None
@@ -149,10 +168,11 @@ class CartItem(TimestampsModel):
     def delete(self, *args, **kwargs): # noqa
         # return the product(s) to the shelves
         self.product.quantity += self.quantity
+        self.product.save()
         return super().delete(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Cart item: {self.quantity} nos of {self.product.__str__}"
+        return f"Cart item: {self.quantity} nos of '{self.product.__str__()}'"
 
 
 class Order(TimestampsModel):
