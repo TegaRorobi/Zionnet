@@ -55,9 +55,10 @@ urlpatterns = [
             {
                 'get':'retrieve_store',
                 'put':'update_store',
-                'patch':'partial_update_store'
+                'patch':'partial_update_store',
+                'delete':'destroy_store'
             }
         ),
-        name='store-retrieve-update'
+        name='store-retrieve-update-delete'
     ),
 ]

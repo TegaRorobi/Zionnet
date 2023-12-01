@@ -177,3 +177,11 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
     def partial_update_store(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.update_store(request, *args, **kwargs)
+
+    @decorators.action(detail=True)
+    def destroy_store(self, request, *args, **kwargs):
+        self.get_object().delete()
+        return Response(
+            {'message': 'Store successfully deleted.'}, 
+            status=status.HTTP_204_NO_CONTENT
+        )
