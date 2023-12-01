@@ -17,11 +17,7 @@ class IsStoreOwner(permissions.BasePermission):
                 .values_list("vendor", flat=True)
                 .first()
             )
-            return (
-                request.user.is_authenticated
-                and hasattr(request.user, "stores")
-                and request.user.id == store_owner
-            )
+            return request.user.is_authenticated and request.user.id == store_owner
         return False
 
 
