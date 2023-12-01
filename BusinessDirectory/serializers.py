@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import (
     BusinessListingCategory,
+    BusinessListingVendor,
     BusinessListing,
     BusinessListingRequest,
     BusinessListingImage,
@@ -9,6 +10,16 @@ from .models import (
     BusinessListingReview,
     BusinessLoan,
 )
+
+
+class BusinessListingVendorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusinessListingVendor
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True},
+            'is_approved': {'read_only': True},
+        }
 
 
 class BusinessListingRequestSerializer(serializers.ModelSerializer):

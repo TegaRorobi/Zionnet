@@ -1,14 +1,16 @@
 from django.db import models
 from helpers.models import TimestampsModel
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
+from helpers.fields import ValidatedImageField
 
 User = get_user_model()
 
 
 class BusinessListingCategory(TimestampsModel):
     name = models.CharField(max_length=255)
-    image = models.ImageField(upload_to="business_listing_category_images")
+    image = models.ImageField(upload_to="business_listing_category_images", null=True)
 
     def __str__(self):
         return self.name
@@ -17,13 +19,32 @@ class BusinessListingCategory(TimestampsModel):
         verbose_name_plural="Business listing categories"
 
 
+class BusinessListingVendor(TimestampsModel):
+    ID_TYPE_CHOICES = [
+        ('NIN', 'NIN'),
+        ("Driver's License", "Driver's License"),
+        ("Voter's Card", "Voter's Card")
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='business_listing_vendor_profile')
+    email = models.EmailField(_('vendor email address'))
+    id_type = models.CharField(_('id type'), max_length=30, choices=ID_TYPE_CHOICES)
+    id_front = models.FileField(_('id front'), upload_to='listings/vendors/id_files', null=True, blank=True)
+    id_back = models.FileField(_('id back'), upload_to='listings/vendors/id_files', null=True, blank=True)
+    request_info = models.CharField(_('additional request information'), max_length=400, null=True, blank=True)
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return 'Business Listing Vendor: ' + self.email.__str__()
+
+
 class BusinessListing(TimestampsModel):
-    vendor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
+    vendor = models.ForeignKey(BusinessListingVendor, on_delete=models.CASCADE, related_name="listings")
     category = models.ForeignKey(
         BusinessListingCategory, on_delete=models.CASCADE, related_name="listings"
     )
     name = models.CharField(max_length=255)
     description = models.TextField()
+    cover_image = ValidatedImageField(upload_to='listings/cover_images', null=True, blank=True)
     country = models.CharField(max_length=255)
     province = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
