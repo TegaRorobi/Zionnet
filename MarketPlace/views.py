@@ -1,5 +1,8 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, viewsets, mixins, decorators, status, permissions
+
+from rest_framework import (
+    generics, viewsets, mixins, decorators, status, permissions
+)
+from .permissions import IsApprovedStoreVendor
 from rest_framework.response import Response
 from django.db.models import Count
 from .permissions import IsStoreOwner
@@ -172,6 +175,63 @@ class StoreVendorView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
+
+    "API Viewset to perform CRUD operations on the store(s) of the currently authenticated user"
+
+    permission_classes = [IsApprovedStoreVendor]
+    serializer_class = StoreSerializer
+
+    def get_queryset(self):
+        return Store.objects.filter(
+            vendor=self.request.user.store_vendor_profile
+        )
+
+    @decorators.action(detail=False)
+    def get_user_stores(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @decorators.action(detail=True)
+    def create_store(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(vendor=request.user.store_vendor_profile)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, headers=headers, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(detail=True)
+    def retrieve_store(self, request, *args, **kwargs):
+        store = self.get_object()
+        serializer = self.get_serializer(store, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @decorators.action(detail=True)
+    def update_store(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        store = self.get_object()
+        serializer = self.get_serializer(store, data=request.data, partial=partial)
+        if serializer.is_valid():
+            serializer.save()
+            if getattr(store, '_prefetched_objects_cache', None):
+                store._prefetched_objects_cache = {}
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(detail=True)
+    def partial_update_store(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update_store(request, *args, **kwargs)
+
+    @decorators.action(detail=True)
+    def destroy_store(self, request, *args, **kwargs):
+        self.get_object().delete()
+        return Response(
+            {'message': 'Store successfully deleted.'}, 
+            status=status.HTTP_204_NO_CONTENT
+        )
 class UserOrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
 
