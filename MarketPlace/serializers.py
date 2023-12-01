@@ -51,7 +51,6 @@ class StoreVendorSerializer(serializers.ModelSerializer):
         model = StoreVendor
         fields = '__all__'
         extra_kwargs = {
-<<<<<<< HEAD
             'user': {'read_only': True},
             'is_approved': {'read_only': True},
         }
@@ -64,14 +63,10 @@ class StoreSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'vendor': {'read_only':True},
         }
-=======
-            "user": {"read_only": True},
-            "is_approved": {"read_only": True},
-        }
+
 
 class OrderSerializer(serializers.ModelSerializer):
     buyer = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = Order
         fields = '__all__'
->>>>>>> 066ea6146fce40d4265466e7125e6096a6f461a7
