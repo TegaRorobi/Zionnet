@@ -494,3 +494,82 @@ class OrderAPITestCase(APITestCase):
         url = reverse('MarketPlace:update_order', args=[self.order.id])
         response = self.client.patch(url, {'quantity': 3})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class StoreProductViewsTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            email="test@example.com", password="testpassword"
+        )
+
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+        self.marketplace = MarketPlace.objects.create(name="Test Marketplace")
+        self.vendor = StoreVendor.objects.create(
+            user=self.user,
+            email="vendor@example.com",
+            id_type="NIN",
+        )
+        self.store = Store.objects.create(
+            marketplace=self.marketplace,
+            vendor=self.vendor,
+            name="Test Store",
+            country="Test Country",
+            city="Test City",
+            province="Test Province",
+        )
+        self.category = ProductCategory.objects.create(
+            marketplace=self.marketplace, name="Test Category"
+        )
+        self.product = Product.objects.create(
+            store=self.store,
+            category=self.category,
+            name="Test Product",
+            quantity=10,
+            price=50.00,
+            currency_symbol="₦",
+            currency_abbrev="NGN",
+            currency_verbose="Naira",
+        )
+
+    def test_store_product_list_create_view(self):
+        url = reverse("MarketPlace:store-products", kwargs={"store_id": self.store.id})
+        data = {
+            "name": "New Product",
+            "description": "New Product Description",
+            "quantity": 20,
+            "discount": "0.05",
+            "price": "150.0",
+            "currency_symbol": "-",
+            "currency_abbrev": "BRR",
+            "currency_verbose": "Birr",
+            "store": self.store.id,
+            "category": self.category.id
+        }
+
+        response = self.client.post(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_store_product_update_view(self):
+        url = reverse(
+            "MarketPlace:store-product",
+            kwargs={"store_id": self.store.id, "pk": self.product.id},
+        )
+        data = {"quantity": 15}
+
+        response = self.client.patch(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Product.objects.get(id=self.product.id).quantity, 15)
+
+    def test_store_product_delete_view(self):
+        url = reverse(
+            "MarketPlace:store-product",
+            kwargs={"store_id": self.store.id, "pk": self.product.id},
+        )
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 204)        

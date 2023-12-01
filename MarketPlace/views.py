@@ -8,7 +8,8 @@ from django.db.models import Count
 from helpers import pagination
 from .serializers import *
 from .models import *
-from .permissions import IsOrderOwner
+from .permissions import IsOrderOwner, IsStoreOwner
+from django.shortcuts import get_object_or_404
 
 
 
@@ -208,3 +209,48 @@ class CancelOrderView(generics.DestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsOrderOwner]
+
+
+class StoreProductListCreateView(generics.ListCreateAPIView):
+    """API endpoint for CRUD operations for products within a store"""
+
+    serializer_class = ProductSerializer
+    permission_classes = [IsStoreOwner]
+
+    def get_queryset(self):
+        """API endpoint to retrieve all products within a store"""
+        store_id = self.kwargs["store_id"]
+
+        return Product.objects.filter(store__id=store_id)
+
+    def perform_create(self, serializer):
+        store_id = self.kwargs["store_id"]
+        store = get_object_or_404(Store, id=store_id)
+
+        serializer.is_valid(raise_exception=True)
+        product = serializer.save(store=store)
+
+    def post(self, request, *args, **kwargs):
+        """API endpoint to create product within a store"""
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+
+class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ProductSerializer
+    permission_classes = [IsStoreOwner]
+
+    def get_queryset(self):
+        store_id = self.kwargs["store_id"]
+        product_id = self.kwargs["pk"]
+
+        return Product.objects.filter(id=product_id, store__id=store_id)

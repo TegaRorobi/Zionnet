@@ -65,4 +65,14 @@ urlpatterns = [
     path('me/orders/create/', CreateOrderView.as_view(), name='create_order'),
     path('me/orders/<int:pk>/', UpdateOrderView.as_view(), name='update_order'),
     path('me/orders/<int:pk>/cancel/', CancelOrderView.as_view(), name='cancel_order'),
+    path(
+        "me/stores/<int:store_id>/products/",
+        StoreProductListCreateView.as_view(),
+        name="store-products",
+    ),
+    path(
+        "me/stores/<int:store_id>/products/<int:pk>/",
+        StoreProductUpdateView.as_view(),
+        name="store-product",
+    ),
 ]
