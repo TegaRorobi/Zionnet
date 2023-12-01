@@ -41,17 +41,23 @@ urlpatterns = [
     ),
     re_path(
         '^me/stores/?$',
-        StoreView.as_view({'get':'get_user_stores'}),
-        name='get-user-stores'
-    ),
-    re_path(
-        '^me/stores/?$',
-        StoreView.as_view({'post':'create_store'}),
-        name='create-store'
+        StoreView.as_view(
+            {
+                'get':'get_user_stores',
+                'post':'create_store',
+            }
+        ),
+        name='store-list-create'
     ),
     re_path(
         '^me/stores/(?P<pk>\d+)/?$',
-        StoreView.as_view({'get':'retrieve_store'}),
-        name='retrieve-store'
+        StoreView.as_view(
+            {
+                'get':'retrieve_store',
+                'put':'update_store',
+                'patch':'partial_update_store'
+            }
+        ),
+        name='store-retrieve-update'
     ),
 ]

@@ -160,3 +160,20 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         store = self.get_object()
         serializer = self.get_serializer(store, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @decorators.action(detail=True)
+    def update_store(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        store = self.get_object()
+        serializer = self.get_serializer(store, data=request.data, partial=partial)
+        if serializer.is_valid():
+            serializer.save()
+            if getattr(store, '_prefetched_objects_cache', None):
+                store._prefetched_objects_cache = {}
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(detail=True)
+    def partial_update_store(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update_store(request, *args, **kwargs)
