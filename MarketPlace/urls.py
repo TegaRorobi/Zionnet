@@ -21,8 +21,23 @@ urlpatterns = [
     ),
     re_path(
         '^me/cart/?$',
-        GetCartView.as_view({'get':'get_user_cart'}),
+        CartView.as_view({'get':'get_user_cart'}),
         name='user-cart-detail'
+    ),
+    re_path(
+        '^me/cart/items/?$',
+        CartView.as_view({'get':'get_user_cart_items'}),
+        name='user-cart-items-list'
+    ),
+    re_path(
+        '^me/cart/dump/?$',
+        CartView.as_view({'delete':'delete_user_cart_items'}),
+        name='user-cart-dump'
+    ),
+    re_path(
+        '^stores/vendor/request/?$',
+        StoreVendorView.as_view({'post':'create_store_vendor_request'}),
+        name='store-vendor-request-create'
     ),
     path('me/orders/', UserOrderListView.as_view(), name='user_order_list'),
     path('me/orders/create/', CreateOrderView.as_view(), name='create_order'),

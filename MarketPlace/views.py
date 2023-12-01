@@ -1,9 +1,10 @@
 
 from rest_framework import (
-    generics, viewsets, decorators, status, permissions
+    generics, viewsets, mixins, decorators, status, permissions
 )
 from rest_framework.response import Response
 from django.db.models import Count
+from helpers import pagination
 from .serializers import *
 from .models import *
 from .permissions import IsOrderOwner
@@ -65,10 +66,21 @@ class GetProductCategoriesView(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class GetCartView(viewsets.GenericViewSet):
+class CartView(viewsets.GenericViewSet):
 
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = CartSerializer
+    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
+
+    def get_queryset(self):
+        if hasattr(self.request.user, 'cart'):
+            return CartItem.objects.filter(cart=self.request.user.cart)
+        return []
+
+    def get_serializer_class(self):
+        if self.action=='get_user_cart':
+            return CartSerializer
+        elif self.action=='get_user_cart_items':
+            return CartItemSerializer
 
     @decorators.action(detail=True)
     def get_user_cart(self, request, *args, **kwargs):
@@ -77,6 +89,44 @@ class GetCartView(viewsets.GenericViewSet):
         serializer = self.get_serializer(cart, many=False)
         data = {**serializer.data, **{'new_cart':created}}
         return Response(data, status=status.HTTP_200_OK)
+
+
+    @decorators.action(detail=False)
+    def get_user_cart_items(self, request, *args, **kwargs):
+        "API Viewset action to get the currently authenticated user's cart items"
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+
+    @decorators.action(detail=False)
+    def delete_user_cart_items(self, request, *args, **kwargs):
+        "API Viewset action to delete the currently authenticated user's cart items"
+        queryset = self.filter_queryset(self.get_queryset())
+        for cartitem in queryset:
+            cartitem.delete()
+        return Response({
+            "message":"Cart successfully cleared."
+        }, status=status.HTTP_204_NO_CONTENT)
+
+
+class StoreVendorView(viewsets.GenericViewSet, mixins.CreateModelMixin):
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = StoreVendorSerializer
+
+    @decorators.action(detail=True)
+    def create_store_vendor_request(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, is_approved=False)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, headers=headers, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserOrderListView(generics.ListAPIView):
