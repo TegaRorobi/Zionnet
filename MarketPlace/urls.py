@@ -61,10 +61,6 @@ urlpatterns = [
         ),
         name='store-retrieve-update-delete'
     ),
-    path('me/orders/', UserOrderListView.as_view(), name='user_order_list'),
-    path('me/orders/create/', CreateOrderView.as_view(), name='create_order'),
-    path('me/orders/<int:pk>/', UpdateOrderView.as_view(), name='update_order'),
-    path('me/orders/<int:pk>/cancel/', CancelOrderView.as_view(), name='cancel_order'),
     path(
         "me/stores/<int:store_id>/products/",
         StoreProductListCreateView.as_view(),
@@ -75,11 +71,43 @@ urlpatterns = [
         StoreProductUpdateView.as_view(),
         name="store-product",
     ),
-    path('marketplace/<int:pk>/products/popular', GetPopularProductsView.as_view(),
-   name='marketplace-products-popular'),
-   path('marketplace/<int:pk>/products/deals/hot/', HotDealsView.as_view(),
-   name='hot_deals'),
-   path('marketplace/<int:pk>/products/flash-sale/',  FlashSaleProductsView.as_view(), name='flash_sale_products'),
-   path('marketplace/<int:pk>/products/<int:product_id>/flash-sale/create/',
-   CreateFlashSaleView.as_view(), name='create_flash_sale'),
+    path(
+        'me/orders/',
+        UserOrderListView.as_view(),
+        name='user_order_list'
+    ),
+    path(
+        'me/orders/create/',
+        CreateOrderView.as_view(),
+        name='create_order'),
+    path(
+        'me/orders/<int:pk>/',
+        UpdateOrderView.as_view(),
+        name='update_order'
+    ),
+    path(
+        'me/orders/<int:pk>/cancel/',
+        CancelOrderView.as_view(),
+        name='cancel_order'
+    ),
+    path(
+        'marketplace/<int:pk>/products/popular', 
+        GetPopularProductsView.as_view(),
+        name='marketplace-products-popular'
+    ),
+    path(
+        'marketplace/<int:pk>/products/deals/hot/', 
+        HotDealsView.as_view(),
+        name='hot_deals'
+    ),
+    path(
+        'marketplace/<int:pk>/products/flash-sale/', 
+        FlashSaleProductsView.as_view(), 
+        name='flash_sale_products'
+    ),
+    path(
+        'marketplace/<int:pk>/products/<int:product_id>/flash-sale/create/',
+        CreateFlashSaleView.as_view(), 
+        name='create_flash_sale'
+    ),
 ]
