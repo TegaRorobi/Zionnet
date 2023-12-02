@@ -75,4 +75,7 @@ urlpatterns = [
         StoreProductUpdateView.as_view(),
         name="store-product",
     ),
+    path('marketplace/<int:id>/products/',GetProductsApiView.as_view(),name='get_all_products'),
+    path('marketplace/<int:id>/product/<int:product_id>/',ProductRetrieveApiView.as_view(),name='retrieve_product'),
+    path('marketplace/<int:id>/search/',ProductSearchApiView.as_view(),name='search_products'),
 ]

@@ -573,3 +573,55 @@ class StoreProductViewsTest(TestCase):
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, 204)        
+    
+    def test_get_all_products_in_marketplace_view(self):
+        url = reverse(
+            "MarketPlace:get_all_products",
+            kwargs={'id':self.marketplace.id}, 
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK )
+
+    def test_retrieve_product_in_marketsplace(self):
+        url = reverse(
+            "MarketPlace:retrieve_product",
+            kwargs={'id':self.marketplace.id,'product_id':self.product.id},
+        )  
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], 'Test Product')
+        
+    def test_retrieve_nonexistent_marketplace(self):
+        url = reverse("MarketPlace:retrieve_product", kwargs={'id': 999, 'product_id': self.product.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['Message'], "MarketPlace with id '999' not found.")
+
+    def test_retrieve_nonexistent_product(self):
+        url = reverse("MarketPlace:retrieve_product", kwargs={'id': self.marketplace.id, 'product_id': 999})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['Message'], "Product with id '999' not found.") 
+
+    def test_search_existing_product(self):
+        url = reverse("MarketPlace:search_products", kwargs={'id': self.marketplace.id})
+        data = {'search_query': 'Test Product'}
+        response = self.client.get(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)      
+        
+    def test_search_products_no_results(self):
+        url = reverse(
+            "MarketPlace:search_products",
+            kwargs={'id':self.marketplace.id}, 
+        ) 
+        data = {'search_query':'Nonexistent'}
+        response = self.client.get(url, data, format = 'json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['Message'], "No product containing 'Nonexistent' found!")
+
+
+    

@@ -39,6 +39,8 @@ class CartItemSerializer(serializers.ModelSerializer):
         model = CartItem
         fields = '__all__'
 
+class ProductSearchSerializer(serializers.Serializer):
+    search_query = serializers.CharField(max_length = 255, write_only = True)  
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:

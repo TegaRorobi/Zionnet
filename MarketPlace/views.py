@@ -1,4 +1,5 @@
 
+from MarketPlace.mixins import ProductQuerysetMixin
 from rest_framework import (
     generics, viewsets, mixins, decorators, status, permissions
 )
@@ -10,6 +11,7 @@ from .serializers import *
 from .models import *
 from .permissions import IsOrderOwner, IsStoreOwner
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 
 
@@ -254,3 +256,70 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
         product_id = self.kwargs["pk"]
 
         return Product.objects.filter(id=product_id, store__id=store_id)
+
+class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
+    serializer_class = ProductSerializer
+
+    def list(self, request, *args, **kwargs):
+        marketplace_id = self.kwargs['id']
+        try:
+            query = self.custom_queryset(marketplace_id)
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(query, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ProductSearchApiView(generics.ListAPIView, ProductQuerysetMixin):
+    serializer_class = ProductSearchSerializer
+    
+    def list(self, request, *args, **kwargs):
+
+        marketplace_id = kwargs['id'] 
+        
+        try:
+            query = self.custom_queryset(marketplace_id)
+            
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.serializer_class(data=request.data)
+        
+        if  serializer.is_valid(raise_exception= True):
+
+            search_query = serializer.validated_data.get('search_query', '')
+            product_search = query.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
+        
+            if not product_search:
+                return Response({"Message": "No product containing '{}' found!".format(search_query)},
+                            status=status.HTTP_404_NOT_FOUND)
+
+            serializer = ProductSerializer(product_search, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK) 
+    
+
+class ProductRetrieveApiView(generics.ListAPIView, ProductQuerysetMixin):
+    serializer_class = ProductSerializer
+    
+    def get(self, request, *args, **kwargs):
+        marketplace_id = kwargs['id'] 
+        product_id = kwargs['product_id']
+
+        try:
+            query = self.custom_queryset(marketplace_id)
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            retrieve_product = query.get(id=product_id)
+        except query.model.DoesNotExist:
+            return Response({"Message": "Product with id '{}' not found.".format(product_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ProductSerializer(retrieve_product, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)    
+    
