@@ -70,3 +70,15 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
+
+
+class FlashSaleSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(queryset= Product.objects.all())
+    start_datetime= serializers.DateTimeField()
+    end_datetime= serializers.DateTimeField()
+
+    class Meta:
+        model = FlashSale
+        fields =  ['product', 'discount_percentage', 'start_datetime', 'end_datetime']
+        fields = "__all__"
+ 

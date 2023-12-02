@@ -42,3 +42,11 @@ class IsStoreOwner(permissions.BasePermission):
             )
             return request.user.is_authenticated and request.user.id == store_owner
         return False    
+
+
+class IsProductOwner(permissions.BasePermission):
+    message = "You do not have permission to create flash sale for this product."
+
+    def has_object_permission(self, request, view, obj):
+        # Check if the authenticated user is the owner of the product associated with the flash sale
+        return request.user == obj.product.store.store_vendor_profile

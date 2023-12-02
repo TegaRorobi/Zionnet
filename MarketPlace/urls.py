@@ -90,4 +90,24 @@ urlpatterns = [
         CancelOrderView.as_view(),
         name='cancel_order'
     ),
+    path(
+        'marketplace/<int:pk>/products/popular', 
+        GetPopularProductsView.as_view(),
+        name='marketplace-products-popular'
+    ),
+    path(
+        'marketplace/<int:pk>/products/deals/hot/', 
+        HotDealsView.as_view(),
+        name='hot_deals'
+    ),
+    path(
+        'marketplace/<int:pk>/products/flash-sale/', 
+        FlashSaleProductsView.as_view(), 
+        name='flash_sale_products'
+    ),
+    path(
+        'marketplace/<int:pk>/products/<int:product_id>/flash-sale/create/',
+        CreateFlashSaleView.as_view(), 
+        name='create_flash_sale'
+    ),
 ]

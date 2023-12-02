@@ -12,3 +12,10 @@ class ImageSizeValidator:
 
         if image_size_in_bytes > self.max_bytes_size:
             raise ValidationError(f"File Size cannot be more than {self.max_bytes_size/(1024*1024)}MB")
+
+def validate_positive_decimal(value):
+    if value < 0:
+        raise ValidationError(
+            _('%(value)s is not a positive decimal'),
+            params={'value': value},
+        )
