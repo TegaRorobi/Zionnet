@@ -52,3 +52,10 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(StoreVendor)
 class StoreVendorAdmin(admin.ModelAdmin):
     list_display = 'user', 'email', 'is_approved'
+
+@admin.register(FlashSale)
+class FlashSaleAdmin(admin.ModelAdmin):
+    model = FlashSale
+    list_display = ('product', 'discount_percentage', 'start_datetime', 'end_datetime', 'is_available')
+    search_fields = ('product__name',) 
+    list_filter = ( 'start_datetime', 'end_datetime')

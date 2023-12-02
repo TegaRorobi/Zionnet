@@ -4,13 +4,13 @@ from rest_framework import (
 )
 from .permissions import IsApprovedStoreVendor
 from rest_framework.response import Response
-from django.db.models import Count
+from django.db.models import Count,Avg
 from helpers import pagination
 from .serializers import *
 from .models import *
 from .permissions import IsOrderOwner, IsStoreOwner
 from django.shortcuts import get_object_or_404
-
+from django.utils import timezone
 
 
 class GetAllMarketPlacesView(generics.GenericAPIView):
@@ -188,11 +188,14 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
             {'message': 'Store successfully deleted.'}, 
             status=status.HTTP_204_NO_CONTENT
         )
+
+
 class UserOrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
 
     def get_queryset(self):
         return Order.objects.filter(buyer=self.request.user)
+
 
 class CreateOrderView(generics.CreateAPIView):
     serializer_class = OrderSerializer
@@ -200,16 +203,17 @@ class CreateOrderView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(buyer=self.request.user)
 
+
 class UpdateOrderView(generics.UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsOrderOwner]
 
+
 class CancelOrderView(generics.DestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsOrderOwner]
-
 
 class StoreProductListCreateView(generics.ListCreateAPIView):
     """API endpoint for CRUD operations for products within a store"""
@@ -254,3 +258,197 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
         product_id = self.kwargs["pk"]
 
         return Product.objects.filter(id=product_id, store__id=store_id)
+
+
+class GetPopularProductsView(generics.ListAPIView):
+    "API View to get all popular products  within a marketplace"
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        market_id = self.kwargs.get('pk')
+
+        # Retrieve the market place based on the provided id
+        try:
+            market = MarketPlace.objects.get(pk=market_id)
+        except MarketPlace.DoesNotExist:
+            raise MarketPlace.DoesNotExist("MarketPlace not found.")
+
+        # Get all products associated with the market place
+        products = Product.objects.filter(store__marketplace=market)
+       
+
+
+        # Calculate product popularity based on ratings
+        # Filter out products with an average rating of 3.5 or above
+        popular_products = products.annotate(
+            average_rating=Avg('ratings__value')
+        ).filter(average_rating__gte=3.5)
+
+        # Return the sorted list of popular products
+        return popular_products
+
+    def list(self, request, *args, **kwargs):
+        # Check if any popular products were found
+        try:
+            queryset = self.get_queryset()
+
+            if queryset:
+                # Return the sorted list of popular products
+               serialized_products = self.serializer_class(queryset, many=True)
+               return Response(serialized_products.data, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                'error': f'Popular products for MarketPlace with {self.lookup_field} '
+                f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} does not exist'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        except MarketPlace.DoesNotExist:
+            # Handle the exception and return a specific error response
+            return Response({
+                'error': f'MarketPlace with {self.lookup_field} '
+                f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} does not exist'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class HotDealsView(generics.ListAPIView):
+    "API View to get hot deals products  within a marketplace "
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        market_id = self.kwargs.get('pk')
+
+        # Retrieve the market place based on the provided id
+        try:
+            market = MarketPlace.objects.get(pk=market_id)
+        except MarketPlace.DoesNotExist:
+            raise MarketPlace.DoesNotExist("MarketPlace not found.")
+
+        # Get all products associated with the market place and have discount greater than 50%
+        hot_deals = Product.objects.filter(store__marketplace=market, discount__gte=50)
+        
+        return hot_deals
+
+    def list(self, request, *args, **kwargs):
+        # Check if any hot deals were found
+        try:
+            queryset = self.get_queryset()
+
+            if queryset:
+                # Return the sorted list of hot deals
+                serialized_hot_deals = self.serializer_class(queryset, many=True)
+                return Response(serialized_hot_deals.data, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': f'Hot deals for MarketPlace with {self.lookup_field} '
+                             f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} do not exist'
+                }, status=status.HTTP_404_NOT_FOUND)
+
+        except MarketPlace.DoesNotExist:
+            # Handle the exception when market doesn't exist 
+            return Response({
+                'error': f'MarketPlace with {self.lookup_field} '
+                         f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} does not exist'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class FlashSaleProductsView(generics.ListAPIView):
+    "API View to get all  products on flash sales within a marketplace"
+    serializer_class = FlashSaleSerializer
+
+    def get_queryset(self):
+        market_id = self.kwargs.get('pk')
+
+        # Retrieve the market place based on the provided id
+        try:
+            market = MarketPlace.objects.get(pk=market_id)
+        except MarketPlace.DoesNotExist:
+            raise MarketPlace.DoesNotExist("MarketPlace not found.")
+
+        # Get all flash sales associated with the market place
+        now = timezone.now()
+        flash_sales = FlashSale.objects.filter(
+            product__store__marketplace=market,
+            start_datetime__lte=now,
+            end_datetime__gte=now
+        )
+
+        return flash_sales
+
+    def list(self, request, *args, **kwargs):
+      # Check if any hot deals were found
+        try:
+            queryset = self.get_queryset()
+
+            if queryset.exists():
+                serialized_flash_sales = self.serializer_class(queryset, many=True)
+                return Response(serialized_flash_sales.data, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                  {'error': f'No flash sales found for products of MarketPlace with {self.lookup_field} 'f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} exist'
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+  
+        except MarketPlace.DoesNotExist:
+            # Handle the exception when market doesn't exist 
+            return Response({
+                'error': f'MarketPlace with {self.lookup_field} '
+                         f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} does not exist'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class CreateFlashSaleView(generics.CreateAPIView):
+    "API View to get all popular products  within a marketplace"
+    serializer_class = FlashSaleSerializer
+    # permission_classes = [permissions.AllowAny]  # You can adjust permissions as needed
+
+    def get_queryset(self):
+        market_id = self.kwargs.get('pk', None)
+        product_id = self.kwargs.get('product_id', None)
+
+        # Retrieve the market place based on the provided id
+        try:
+            market = MarketPlace.objects.get(pk=market_id)
+        except MarketPlace.DoesNotExist:
+            raise MarketPlace.DoesNotExist(f'MarketPlace with {self.lookup_field}'   f' {self.kwargs[self.lookup_url_kwarg or self.lookup_field]} does not exist')
+
+        # Get the product associated with the market place
+        try:
+            product = Product.objects.get(store__marketplace=market,
+            pk=product_id)
+            return product
+        except Product.DoesNotExist:
+            return None
+
+    def post(self, request, *args, **kwargs):
+        try:
+            product = self.get_queryset()
+
+            if not product:
+                return Response({
+                    'error':f'Product of pk {kwargs.get("product_id")} for MarketPlace with {self.lookup_field} {self.kwargs[self.lookup_url_kwarg or self.lookup_field]} does not exist'
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            # Check if a flash sale already exists for the product
+            if FlashSale.objects.filter(product=product).exists():
+                return Response({
+                    'error': 'Flash sale already exists for this product'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Perform create if everything is valid
+            serializer.save(product=product)  # Added saving the product
+
+            return Response({
+                'success': 'Flash sale created successfully',
+                'data': serializer.data
+                
+            }, status=status.HTTP_201_CREATED)
+
+        except MarketPlace.DoesNotExist as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_404_NOT_FOUND)
+            
