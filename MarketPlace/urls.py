@@ -75,10 +75,11 @@ urlpatterns = [
         '^me/favourites/?$',
         FavouriteProductView.as_view(
             {
-                'get': 'retrieve_favourites'
+                'get': 'retrieve_favourites',
+                'post': 'add_product_to_favourites'
             }
         ),
-        name='retrieve-favourite-products'
+        name='favourite-products-list-create'
     ),
     path(
         'me/orders/',
