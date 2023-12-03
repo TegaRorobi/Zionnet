@@ -329,6 +329,7 @@ class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         )
 
     @decorators.action(detail=False)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
     def retrieve_favourites(self, request, *args, **kwargs):
         favourites = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(favourites)
@@ -339,6 +340,7 @@ class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(serializer.data)
 
     @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
     def add_product_to_favourites(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -351,6 +353,7 @@ class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
     def remove_product_from_favourites(self, request, *args, **kwargs):
         self.get_object().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
