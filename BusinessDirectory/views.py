@@ -1,36 +1,42 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import BusinessListing, BusinessListingRating
-from .serializers import BusinessListingSerializer, BusinessListingRatingSerializer
 from django.http import Http404
-from rest_framework import status
-from django.db.models import Avg
+from rest_framework import status, viewsets
+from django.db import models
+from rest_framework import generics, filters, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .permissions import IsVendorVerified
+from django.db.models import Count
+from .pagination import ListingPagination
+from .serializers import *
+from .models import *
+
 
 #endpoint to Retrieve top-rated listings based on average rating
-class TopRatedListingsView(generics.ListAPIView):
-    permission_classes = []
-    serializer_class = BusinessListingSerializer
-    
-    def get_queryset(self):
+class BusinessListingRatingViewSet(viewsets.ModelViewSet):
+    queryset = BusinessListingRating.objects.all()
+    serializer_class = BusinessListingRatingSerializer
+
+    @action(detail=False, methods=['GET'])
+    def top_rated(self, request):
         try:
-            top_rated_listings = BusinessListing.objects.annotate(avg_rating=Avg('ratings__value')).order_by('-avg_rating')[:5]
-            return top_rated_listings
-        except Exception as e:
-            error_message = str(e)
-            response = {
-                'status_message': 'error',
-                'message': 'An error occurred: ' + error_message,
-            }
-            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-    def list(self, request, *args, **kwargs):
-        try:
-            queryset = self.get_queryset()
-            serializer = self.get_serializer(queryset, many=True)
+            #Get top 5 listings based on average rating
+            top_listings = BusinessListingRating.objects.values('listing_id') \
+                .annotate(avg_rating=models.Avg('value')) \
+                .order_by('-avg_rating')[:5]
+
+            if not top_listings:
+                return Response({"error": "No top-rated listings found"}, status=status.HTTP_404_NOT_FOUND)
+
+            listing_ids = [item['listing_id'] for item in top_listings]
+            top_listings_data = BusinessListingRating.objects.filter(listing_id__in=listing_ids)
+
+            serializer = self.get_serializer(top_listings_data, many=True)
             return Response(serializer.data)
+
         except Exception as e:
             error_message = str(e)
             response = {

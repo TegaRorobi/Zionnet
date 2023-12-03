@@ -42,7 +42,7 @@ urlpatterns = [
     ),
     path(
         'api/listings/top_rated/', 
-        TopRatedListingsView.as_view(), 
+        BusinessListingRatingViewSet.as_view, 
         name='top-rated-listings'
     ),
     path(

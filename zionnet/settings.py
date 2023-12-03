@@ -90,10 +90,20 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'testing',         
+        'USER': 'root',         
+        'PASSWORD': 'busayo08/07', 
+        'HOST': 'localhost',            
+        'PORT': '3306',                
     }
 }
 
@@ -163,8 +173,8 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
-EMAIL_USE_TLS = True
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str, default='***')
-EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str, default='***')
+# EMAIL_USE_TLS = True
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str, default='***')
+# EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str, default='***')
