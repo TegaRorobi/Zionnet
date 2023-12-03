@@ -335,7 +335,7 @@ class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
 class ProductSearchApiView(generics.ListAPIView, ProductQuerysetMixin):
     serializer_class = ProductSearchSerializer
     
-    def list(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
 
         marketplace_id = kwargs['id'] 
         

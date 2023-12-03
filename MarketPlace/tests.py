@@ -572,6 +572,7 @@ class StoreProductViewsTest(TestCase):
 
         response = self.client.delete(url)
 
+        self.assertEqual(response.status_code, 204)        
     
     def test_get_all_products_in_marketplace_view(self):
         url = reverse(
@@ -607,9 +608,10 @@ class StoreProductViewsTest(TestCase):
     def test_search_existing_product(self):
         url = reverse("MarketPlace:search_products", kwargs={'id': self.marketplace.id})
         data = {'search_query': 'Test Product'}
-        response = self.client.get(url, data, format='json')
+        response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['name'], 'Test Product')
         self.assertEqual(len(response.data), 1)      
         
     def test_search_products_no_results(self):
@@ -618,13 +620,11 @@ class StoreProductViewsTest(TestCase):
             kwargs={'id':self.marketplace.id}, 
         ) 
         data = {'search_query':'Nonexistent'}
-        response = self.client.get(url, data, format = 'json')
+        response = self.client.post(url, data, format = 'json') 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data['Message'], "No product containing 'Nonexistent' found!")
+        self.assertEqual(len(response.data), 1) 
 
-
-    
-        self.assertEqual(response.status_code, 204)        
 
 
 class MarketPlaceViewsTest(TestCase):
