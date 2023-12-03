@@ -328,6 +328,7 @@ class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
             user=self.request.user
         )
 
+    @decorators.action(detail=False)
     def retrieve_favourites(self, request, *args, **kwargs):
         favourites = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(favourites)
@@ -337,13 +338,22 @@ class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         serializer = self.get_serializer(favourites, many=True)
         return Response(serializer.data)
 
+    @decorators.action(detail=True)
     def add_product_to_favourites(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=self.request.user)
+            favourite = serializer.save(user=self.request.user)
             headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
+            success_message = {
+                'message': f'Product \'{str(favourite.product)}\' successfully added to favourites'
+            }
+            return Response({**success_message, **serializer.data}, headers=headers, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(detail=True)
+    def remove_product_from_favourites(self, request, *args, **kwargs):
+        self.get_object().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class GetPopularProductsView(generics.ListAPIView):
@@ -361,8 +371,6 @@ class GetPopularProductsView(generics.ListAPIView):
 
         # Get all products associated with the market place
         products = Product.objects.filter(store__marketplace=market)
-       
-
 
         # Calculate product popularity based on ratings
         # Filter out products with an average rating of 3.5 or above
