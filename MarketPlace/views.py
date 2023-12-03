@@ -316,6 +316,49 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
         return Product.objects.filter(id=product_id, store__id=store_id)
 
 
+class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
+
+    "API Viewset to retrieve, create and delete favourite products of the currently authenticated user"
+
+    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FavouriteProductSerializer
+    def get_queryset(self):
+        return FavouriteProduct.objects.filter(
+            user=self.request.user
+        )
+
+    @decorators.action(detail=False)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
+    def retrieve_favourites(self, request, *args, **kwargs):
+        favourites = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(favourites)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(favourites, many=True)
+        return Response(serializer.data)
+
+    @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
+    def add_product_to_favourites(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            favourite = serializer.save(user=self.request.user)
+            headers = self.get_success_headers(serializer.data)
+            success_message = {
+                'message': f'Product \'{str(favourite.product)}\' successfully added to favourites'
+            }
+            return Response({**success_message, **serializer.data}, headers=headers, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
+    def remove_product_from_favourites(self, request, *args, **kwargs):
+        self.get_object().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class GetPopularProductsView(generics.ListAPIView):
     "API View to get all popular products  within a marketplace"
     serializer_class = ProductSerializer
@@ -331,8 +374,6 @@ class GetPopularProductsView(generics.ListAPIView):
 
         # Get all products associated with the market place
         products = Product.objects.filter(store__marketplace=market)
-       
-
 
         # Calculate product popularity based on ratings
         # Filter out products with an average rating of 3.5 or above

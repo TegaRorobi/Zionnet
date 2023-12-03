@@ -19,7 +19,11 @@ class ProductAdmin(admin.ModelAdmin):
 
     @admin.display()
     def _vendor(self, obj):
-        return self.vendor.__str__()
+        return obj.store.vendor.__str__()
+
+@admin.register(FavouriteProduct)
+class FavouriteProductAdmin(admin.ModelAdmin):
+    list_display = 'user', 'product', 'created_at'
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
