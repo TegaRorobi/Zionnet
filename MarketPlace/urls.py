@@ -71,6 +71,15 @@ urlpatterns = [
         StoreProductUpdateView.as_view(),
         name="store-product",
     ),
+    re_path(
+        '^me/favourites/?$',
+        FavouriteProductView.as_view(
+            {
+                'get': 'retrieve_favourites'
+            }
+        ),
+        name='retrieve-favourite-products'
+    ),
     path(
         'me/orders/',
         UserOrderListView.as_view(),
