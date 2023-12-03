@@ -316,6 +316,28 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
         return Product.objects.filter(id=product_id, store__id=store_id)
 
 
+class FavouriteProductView(viewsets.GenericViewSet):
+
+    "API Viewset to retrieve, create and delete favourite products of the currently authenticated user"
+
+    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FavouriteProductSerializer
+    def get_queryset(self):
+        return FavouriteProduct.objects.filter(
+            user=self.request.user
+        )
+
+    def retrieve_favourites(self, request, *args, **kwargs):
+        favourites = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(favourites)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(favourites, many=True)
+        return Response(serializer.data)
+
+
 class GetPopularProductsView(generics.ListAPIView):
     "API View to get all popular products  within a marketplace"
     serializer_class = ProductSerializer

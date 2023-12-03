@@ -189,7 +189,7 @@ class GetCartViewTestCase(TestCase):
         User.objects.all().delete()
 
 
-class StoreVendorViewTestCase(TestCase):
+class StoreVendorTestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
@@ -347,6 +347,73 @@ class StoreViewTestCase(TestCase):
         os.remove(self.image_tempfile3.name)
         Store.objects.all().delete()
         StoreVendor.objects.all().delete()
+        MarketPlace.objects.all().delete()
+        User.objects.all().delete()
+
+
+class FavouriteProductTestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email= 'test@domain.com',password= 'password'
+        )
+        marketplace = MarketPlace.objects.create(
+            name='E-commerce', cover_image='path/to/image.extension'
+        )
+        vendor = StoreVendor.objects.create(
+            user=self.user, email=self.user.email
+        )
+        store = Store.objects.create(
+            marketplace= marketplace,  vendor=vendor, name='Apple',
+            country='US', city='Chicago', province='Stonetown'
+        )
+        product_category = ProductCategory.objects.create(
+            marketplace=marketplace, name='Electronics & Gadgets'
+        )
+        self.product1 = Product.objects.create(
+            store=store, category=product_category,
+            name='Apple Vision Pro', price=3499.99
+        )
+        self.product2 = Product.objects.create(
+            store=store, category=product_category,
+            name='Ergonomic chair', price=2199.99
+        )
+
+    def test_retrieve_favourites_when_empty(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            reverse('MarketPlace:retrieve-favourite-products')
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_retrieve_favourites_when_not_empty(self):
+        self.client.force_authenticate(user=self.user)
+        FavouriteProduct.objects.create(user=self.user, product=self.product1)
+        FavouriteProduct.objects.create(user=self.user, product=self.product2)
+        response = self.client.get(
+            reverse('MarketPlace:retrieve-favourite-products')
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['count'], 2)
+        self.assertEqual(len(response.json()['results']), 2)
+
+        FavouriteProduct.objects.first().delete()
+        response = self.client.get(
+            reverse('MarketPlace:retrieve-favourite-products')
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['count'], 1)
+        self.assertEqual(len(response.json()['results']), 1)
+
+    def tearDown(self):
+        FavouriteProduct.objects.all().delete()
+        Product.objects.all().delete()
+        ProductCategory.objects.all().delete()
+        Store.objects.all().delete()
         MarketPlace.objects.all().delete()
         User.objects.all().delete()
 
@@ -651,4 +718,3 @@ class MarketPlaceViewsTest(TestCase):
         url = reverse('MarketPlace:flash_sale_products', kwargs={'pk': self.marketplace.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-   

@@ -82,6 +82,14 @@ class Product(TimestampsModel):
         return self.name
 
 
+class FavouriteProduct(TimestampsModel):
+    user = models.ForeignKey(User, related_name='favourite_products', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='enlisted_favourites', on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return self.product.__str__()
+
+
 class ProductImage(TimestampsModel):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
     image = ValidatedImageField(_('image file'), upload_to='products/product_images')
