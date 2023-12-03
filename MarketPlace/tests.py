@@ -572,7 +572,6 @@ class StoreProductViewsTest(TestCase):
 
         response = self.client.delete(url)
 
-        self.assertEqual(response.status_code, 204)        
     
     def test_get_all_products_in_marketplace_view(self):
         url = reverse(
@@ -625,3 +624,83 @@ class StoreProductViewsTest(TestCase):
 
 
     
+        self.assertEqual(response.status_code, 204)        
+
+
+class MarketPlaceViewsTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.marketplace = MarketPlace.objects.create(name='Test Market', cover_image='test_image.jpg')
+
+        self.user = User.objects.create_user(email='testuser@example.com',  password ='testpassword')
+       
+        self.client.force_authenticate(user=self.user)
+
+        self.vendor = StoreVendor.objects.create(
+              user=self.user,
+              email="vendor@example.com")
+
+        self.store = Store.objects.create(
+            marketplace=self.marketplace,
+            vendor=self.vendor,
+            name='Test Store',
+            description='Test Store Description',
+            country='Test Country',
+            city='Test City',
+            province='Test Province'
+        )
+
+        self.product_category = ProductCategory.objects.create(
+            marketplace=self.marketplace,
+            name='Test Category'
+        )
+
+        self.product = Product.objects.create(
+            store=self.store,
+            category=self.product_category,
+            name='Test Product',
+            description='Test Product Description',
+            price=100.0,
+            quantity=50,
+            discount=60
+        )
+
+        # Create some ratings for the product
+        ProductRating.objects.create(user=self.user, product=self.product, value=4)
+        ProductRating.objects.create(user=self.user, product=self.product, value=5)
+        ProductRating.objects.create(user=self.user, product=self.product, value=3)
+
+    def test_get_popular_products_view(self):
+        url = reverse('MarketPlace:marketplace-products-popular', kwargs={'pk': self.marketplace.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_hot_deals_view(self):
+        url = reverse('MarketPlace:hot_deals', kwargs={'pk': self.marketplace.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_create_flash_sale_view(self):
+        url = reverse('MarketPlace:create_flash_sale', kwargs={'pk': self.marketplace.pk, 'product_id': self.product.pk})
+        data = {
+            'product':self.product.pk,
+            'discount_percentage': 10.0,
+            'start_datetime': '2023-01-01T00:00:00Z',
+            'end_datetime': '2024-02-01T00:00:00Z',
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    
+    def test_flash_sale_products_view(self):
+        # Assuming there is a flash sale for the product
+        FlashSale.objects.create(
+            product=self.product,
+            discount_percentage=60,
+            start_datetime='2023-01-01T00:00:00Z',
+            end_datetime='2024-02-01T00:00:00Z'
+        )
+
+        url = reverse('MarketPlace:flash_sale_products', kwargs={'pk': self.marketplace.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+   

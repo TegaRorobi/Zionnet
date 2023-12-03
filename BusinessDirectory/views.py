@@ -1,8 +1,9 @@
 from rest_framework import generics, filters, status
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .permissions import IsVendorVerified
-from django.db.models import Count
+from django.db.models import Count, Avg
 from .pagination import ListingPagination
 from .serializers import *
 from .models import *
@@ -14,12 +15,20 @@ class BusinessListingRequestCreateView(generics.CreateAPIView):
     queryset = BusinessListingRequest.objects.all()
     serializer_class = BusinessListingRequestSerializer
 
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def post(self, *args, **kwargs):
+        return super().post(*args, **kwargs)
+
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
 
 
 class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
     serializer_class = BusinessListingVendorSerializer
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def post(self, *args, **kwargs):
+        return super().post(*args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, is_approved=False)
@@ -49,6 +58,11 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
     ordering = ["-created_at"]
     pagination_class = ListingPagination
     permission_classes = [IsVendorVerified]
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
+
 
     def retrieve(self, request, *args, **kwargs):
         # retrieves an instance of a listing and attach the related images for the listing
@@ -104,6 +118,7 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         business_listing = serializer.save(vendor_id=self.request.user)
 
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -117,6 +132,7 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
         )
 
 class PopularBusinessListingView(APIView):
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def get(self, request, format=None):
         """
         Retrieve popular business listings
@@ -130,6 +146,7 @@ class PopularBusinessListingView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class BusinessListingCategoryListView(APIView):
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def get(self, request, format=None):
         """
         Retrieve all business listing categories from the database
@@ -140,6 +157,7 @@ class BusinessListingCategoryListView(APIView):
 
 
 class PopularBusinessListingCategoryListView(APIView):
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def get(self, request, format=None):
         """
         Retrieve popular business listing categories
@@ -154,7 +172,7 @@ class PopularBusinessListingCategoryListView(APIView):
 
 
 class BusinessLoanRequestView(generics.CreateAPIView):
-    serializer_class = BusinessLoanRequestSerializer
+    serializer_class = BusinessLoanRequestSerializer    
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -168,5 +186,6 @@ class BusinessLoanRequestView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
 
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)

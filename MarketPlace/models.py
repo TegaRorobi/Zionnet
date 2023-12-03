@@ -3,7 +3,9 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
 from helpers import *
+from helpers.validators import validate_positive_decimal
 User = get_user_model()
+
 
 
 class MarketPlace(TimestampsModel):
@@ -188,3 +190,24 @@ class Order(TimestampsModel):
 
     def __str__(self) -> str:
         return f"{self.status}: {self.quantity} nos of {self.product.__str__()}"
+
+
+class FlashSale(TimestampsModel):
+    product = models.ForeignKey(Product, related_name='flashsaleproducts', on_delete=models.CASCADE)
+  
+    discount_percentage = models.DecimalField(
+        _('discount percentage'), 
+        decimal_places=2, 
+        max_digits=5, 
+        validators=[validate_positive_decimal])
+    start_datetime = models.DateTimeField(_('start datetime'))
+    end_datetime = models.DateTimeField(_('end datetime'))
+
+    def __str__(self) -> str:
+        return f"Flash Sale for {self.product.name} - {self.discount_percentage}% off"
+    
+    @property
+    def is_available(self):
+        now = timezone.now()
+        return self.start_datetime <= now <= self.end_datetime
+ 
