@@ -51,13 +51,17 @@ INSTALLED_APPS = [
 
     # third party libraries
     "rest_framework",
+    "corsheaders",
+    "whitenoise",
     "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -135,6 +139,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -159,6 +165,16 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #noqa
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
 }
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS",
+]
+CORS_ALLOW_HEADERS = [
+    "Accept", "Content-Type", "Authorization",
+]
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = "smtp.gmail.com"
