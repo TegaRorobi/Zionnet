@@ -384,7 +384,7 @@ class FavouriteProductTestCase(TestCase):
         self.client.force_authenticate(user=self.user)
 
         response = self.client.get(
-            reverse('MarketPlace:retrieve-favourite-products')
+            reverse('MarketPlace:favourite-products-list-create')
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -393,7 +393,7 @@ class FavouriteProductTestCase(TestCase):
         FavouriteProduct.objects.create(user=self.user, product=self.product1)
         FavouriteProduct.objects.create(user=self.user, product=self.product2)
         response = self.client.get(
-            reverse('MarketPlace:retrieve-favourite-products')
+            reverse('MarketPlace:favourite-products-list-create')
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(hasattr(response, 'json'))
@@ -402,12 +402,23 @@ class FavouriteProductTestCase(TestCase):
 
         FavouriteProduct.objects.first().delete()
         response = self.client.get(
-            reverse('MarketPlace:retrieve-favourite-products')
+            reverse('MarketPlace:favourite-products-list-create')
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(hasattr(response, 'json'))
         self.assertEqual(response.json()['count'], 1)
         self.assertEqual(len(response.json()['results']), 1)
+
+    def test_add_products_to_favourites(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse('MarketPlace:favourite-products-list-create'),
+            data = {'product': self.product1.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['product'], self.product1.id)
 
     def tearDown(self):
         FavouriteProduct.objects.all().delete()
@@ -419,6 +430,7 @@ class FavouriteProductTestCase(TestCase):
 
 
 class OrderModelTestCase(TestCase):
+
     def setUp(self):
         # Create a user
         self.user = User.objects.create_user(email='testuser@example.com', password='testpassword')
@@ -467,6 +479,7 @@ class OrderModelTestCase(TestCase):
 
 
 class OrderAPITestCase(APITestCase):
+
     def setUp(self):
         # Create a user
         self.user = User.objects.create_user(email='testuser@example.com', password='testpassword')
@@ -564,6 +577,7 @@ class OrderAPITestCase(APITestCase):
 
 
 class StoreProductViewsTest(TestCase):
+
     def setUp(self):
         self.user = User.objects.create(
             email="test@example.com", password="testpassword"
@@ -643,6 +657,7 @@ class StoreProductViewsTest(TestCase):
 
 
 class MarketPlaceViewsTest(TestCase):
+
     def setUp(self):
         self.client = APIClient()
         self.marketplace = MarketPlace.objects.create(name='Test Market', cover_image='test_image.jpg')

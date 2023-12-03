@@ -316,7 +316,7 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
         return Product.objects.filter(id=product_id, store__id=store_id)
 
 
-class FavouriteProductView(viewsets.GenericViewSet):
+class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     "API Viewset to retrieve, create and delete favourite products of the currently authenticated user"
 
@@ -336,6 +336,14 @@ class FavouriteProductView(viewsets.GenericViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(favourites, many=True)
         return Response(serializer.data)
+
+    def add_product_to_favourites(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=self.request.user)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetPopularProductsView(generics.ListAPIView):
