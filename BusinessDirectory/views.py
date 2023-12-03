@@ -18,7 +18,7 @@ from .permissions import IsVendorVerified
 from django.db.models import Count, Avg
 
 
-#endpoint to Retrieve top-rated listings based on average rating
+#Endpoint to Retrieve top-rated listings based on average rating
 class BusinessListingRatingViewSet(viewsets.ModelViewSet):
     queryset = BusinessListingRating.objects.all()
     serializer_class = BusinessListingRatingSerializer
