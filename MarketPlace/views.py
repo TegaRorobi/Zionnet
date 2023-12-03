@@ -42,7 +42,7 @@ class GetProductCategoriesView(viewsets.GenericViewSet):
     serializer_class = ProductCategorySerializer
 
     @decorators.action(detail=False)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def get_all_categories(self, request, *args, **kwargs):
         "API Viewset action to get all product categories within a marketplace"
         try:
@@ -58,7 +58,7 @@ class GetProductCategoriesView(viewsets.GenericViewSet):
 
 
     @decorators.action(detail=False)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def get_popular_categories(self, request, *args, **kwargs):
         "API Viewset action to get popular product categories within a marketplace"
         try:
@@ -92,7 +92,7 @@ class CartView(viewsets.GenericViewSet):
             return CartItemSerializer
 
     @decorators.action(detail=True)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Cart'])
     def get_user_cart(self, request, *args, **kwargs):
         "API Viewset action to get the currently authenticated user's cart"
         cart, created = Cart.objects.get_or_create(owner=request.user)
@@ -102,7 +102,7 @@ class CartView(viewsets.GenericViewSet):
 
 
     @decorators.action(detail=False)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Cart'])
     def get_user_cart_items(self, request, *args, **kwargs):
         "API Viewset action to get the currently authenticated user's cart items"
         queryset = self.filter_queryset(self.get_queryset())
@@ -115,7 +115,7 @@ class CartView(viewsets.GenericViewSet):
     
 
     @decorators.action(detail=False)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Cart'])
     def delete_user_cart_items(self, request, *args, **kwargs):
         "API Viewset action to delete the currently authenticated user's cart items"
         queryset = self.filter_queryset(self.get_queryset())
@@ -132,7 +132,7 @@ class StoreVendorView(viewsets.GenericViewSet, mixins.CreateModelMixin):
     serializer_class = StoreVendorSerializer
 
     @decorators.action(detail=True)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Stores'])
     def create_store_vendor_request(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -155,14 +155,14 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         )
 
     @decorators.action(detail=False)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Stores'])
     def get_user_stores(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @decorators.action(detail=True)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Stores'])
     def create_store(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -172,14 +172,14 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.action(detail=True)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Stores'])
     def retrieve_store(self, request, *args, **kwargs):
         store = self.get_object()
         serializer = self.get_serializer(store, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @decorators.action(detail=True)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Stores'])
     def update_store(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         store = self.get_object()
@@ -192,13 +192,13 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.action(detail=True)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Stores'])
     def partial_update_store(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.update_store(request, *args, **kwargs)
 
     @decorators.action(detail=True)
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Stores'])
     def destroy_store(self, request, *args, **kwargs):
         self.get_object().delete()
         return Response(
@@ -210,7 +210,7 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
 class UserOrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Orders'])
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
@@ -221,7 +221,7 @@ class UserOrderListView(generics.ListAPIView):
 class CreateOrderView(generics.CreateAPIView):
     serializer_class = OrderSerializer
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Orders'])
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -234,11 +234,11 @@ class UpdateOrderView(generics.UpdateAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsOrderOwner]
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Orders'])
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Orders'])
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
@@ -247,7 +247,7 @@ class CancelOrderView(generics.DestroyAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsOrderOwner]
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Orders'])
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
 
@@ -271,11 +271,11 @@ class StoreProductListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         product = serializer.save(store=store)
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def post(self, request, *args, **kwargs):
         """API endpoint to create product within a store"""
         serializer = self.get_serializer(data=request.data)
@@ -295,19 +295,19 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductSerializer
     permission_classes = [IsStoreOwner]
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['MarketPlace'])
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
 
@@ -384,6 +384,28 @@ class ProductRetrieveApiView(generics.ListAPIView, ProductQuerysetMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)    
     
 
+class FavouriteProductView(viewsets.GenericViewSet):
+
+    "API Viewset to retrieve, create and delete favourite products of the currently authenticated user"
+
+    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FavouriteProductSerializer
+    def get_queryset(self):
+        return FavouriteProduct.objects.filter(
+            user=self.request.user
+        )
+
+    def retrieve_favourites(self, request, *args, **kwargs):
+        favourites = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(favourites)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(favourites, many=True)
+        return Response(serializer.data)
+
+
 class GetPopularProductsView(generics.ListAPIView):
     "API View to get all popular products  within a marketplace"
     serializer_class = ProductSerializer
@@ -410,6 +432,10 @@ class GetPopularProductsView(generics.ListAPIView):
 
         # Return the sorted list of popular products
         return popular_products
+    
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         # Check if any popular products were found
@@ -451,6 +477,10 @@ class HotDealsView(generics.ListAPIView):
         hot_deals = Product.objects.filter(store__marketplace=market, discount__gte=50)
         
         return hot_deals
+    
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         # Check if any hot deals were found
@@ -497,6 +527,10 @@ class FlashSaleProductsView(generics.ListAPIView):
         )
 
         return flash_sales
+    
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
       # Check if any hot deals were found
@@ -544,6 +578,7 @@ class CreateFlashSaleView(generics.CreateAPIView):
         except Product.DoesNotExist:
             return None
 
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def post(self, request, *args, **kwargs):
         try:
             product = self.get_queryset()

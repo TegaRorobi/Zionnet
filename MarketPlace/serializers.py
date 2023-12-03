@@ -48,6 +48,15 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class FavouriteProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavouriteProduct
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True}
+        }
+
+
 class StoreVendorSerializer(serializers.ModelSerializer):
     class Meta:
         model = StoreVendor

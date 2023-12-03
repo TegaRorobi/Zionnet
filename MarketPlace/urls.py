@@ -74,6 +74,15 @@ urlpatterns = [
     path('marketplace/<int:id>/products/',GetProductsApiView.as_view(),name='get_all_products'),
     path('marketplace/<int:id>/product/<int:product_id>/',ProductRetrieveApiView.as_view(),name='retrieve_product'),
     path('marketplace/<int:id>/search/',ProductSearchApiView.as_view(),name='search_products'),
+    re_path(
+        '^me/favourites/?$',
+        FavouriteProductView.as_view(
+            {
+                'get': 'retrieve_favourites'
+            }
+        ),
+        name='retrieve-favourite-products'
+    ),
     path(
         'me/orders/',
         UserOrderListView.as_view(),
