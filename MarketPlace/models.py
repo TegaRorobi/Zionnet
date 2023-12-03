@@ -134,7 +134,7 @@ class Cart(TimestampsModel):
             actual_price = cartitem.product.price
             discounted_price = cartitem.product.discounted_price
             sub_total += (discounted_price * cartitem.quantity)
-            total_discount += (actual_price - discounted_price)
+            total_discount += (actual_price - discounted_price) * cartitem.quantity
         return {
             # getting the currency from the first cartitem's product (#noqa)
             'currency':self.items.first().product.currency_symbol,
