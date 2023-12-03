@@ -13,12 +13,16 @@ from django.db.models import Count
 from .pagination import ListingPagination
 from .serializers import *
 from .models import *
+from drf_yasg.utils import swagger_auto_schema
+from .permissions import IsVendorVerified
+from django.db.models import Count, Avg
 
 
 #endpoint to Retrieve top-rated listings based on average rating
 class BusinessListingRatingViewSet(viewsets.ModelViewSet):
     queryset = BusinessListingRating.objects.all()
     serializer_class = BusinessListingRatingSerializer
+    permission_classes = []
 
     @action(detail=False, methods=['GET'])
     def top_rated(self, request):
@@ -49,36 +53,17 @@ class BusinessListingRatingViewSet(viewsets.ModelViewSet):
 #Endpoint to Retrieve user listings
 class UserListingsView(generics.ListAPIView):
     serializer_class = BusinessListingSerializer
-    # permission_classes = [IsAuthenticated]
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
+    # permission_classes = []
 
     def get_queryset(self):
         try:
-            return BusinessListing.objects.filter(vendor_id=self.request.user)
+            return BusinessListing.objects.filter(vendor_id=self.request.user.id)
         except Exception as e:
             raise Exception(str(e))
-        # except Exception as e:
-        #     error_message = str(e)
-        #     response = {
-        #         'status_message': 'error',
-        #         'message': 'An error occurred: ' + error_message,
-        #     }
-        #     return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-    # def list(self, request, *args, **kwargs):
-    #     try:
-    #         queryset = self.get_queryset()
-    #         serializer = self.get_serializer(queryset, many=True)
-    #         return Response(serializer.data)
-    #     except Exception as e:
-    #         error_message = str(e)
-    #         response = {
-    #             'status_message': 'error',
-    #             'message': 'An error occurred: ' + error_message,
-    #         }
-    #         return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-
+#endpoint to get a specific business listing
 class ListingDetailView(generics.RetrieveAPIView):
     permission_classes = []
     queryset = BusinessListing.objects.all()
@@ -96,21 +81,16 @@ class ListingDetailView(generics.RetrieveAPIView):
                 'message': 'An error occurred: ' + error_message,
             }
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-from rest_framework import generics, filters, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from .permissions import IsVendorVerified
-from django.db.models import Count
-from .pagination import ListingPagination
-from .serializers import *
-from .models import *
 
-# Create your views here.
 
 
 class BusinessListingRequestCreateView(generics.CreateAPIView):
     queryset = BusinessListingRequest.objects.all()
     serializer_class = BusinessListingRequestSerializer
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def post(self, *args, **kwargs):
+        return super().post(*args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
@@ -118,6 +98,10 @@ class BusinessListingRequestCreateView(generics.CreateAPIView):
 
 class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
     serializer_class = BusinessListingVendorSerializer
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def post(self, *args, **kwargs):
+        return super().post(*args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, is_approved=False)
@@ -147,6 +131,11 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
     ordering = ["-created_at"]
     pagination_class = ListingPagination
     permission_classes = [IsVendorVerified]
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
+
 
     def retrieve(self, request, *args, **kwargs):
         # retrieves an instance of a listing and attach the related images for the listing
@@ -202,6 +191,7 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         business_listing = serializer.save(vendor_id=self.request.user)
 
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -214,8 +204,22 @@ class BusinessListingListCreateView(generics.ListCreateAPIView):
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
 
+class PopularBusinessListingView(APIView):
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, request, format=None):
+        """
+        Retrieve popular business listings
+        popularity is based on the number of ratings
+        """
+        popular_businesses = BusinessListingRating.objects.values(
+            "listing").annotate(avg_rating=Avg("value")
+            ).order_by("-avg_rating")
+
+        serializer = BusinessListingSerializer(popular_businesses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class BusinessListingCategoryListView(APIView):
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def get(self, request, format=None):
         """
         Retrieve all business listing categories from the database
@@ -226,6 +230,7 @@ class BusinessListingCategoryListView(APIView):
 
 
 class PopularBusinessListingCategoryListView(APIView):
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def get(self, request, format=None):
         """
         Retrieve popular business listing categories
@@ -240,7 +245,7 @@ class PopularBusinessListingCategoryListView(APIView):
 
 
 class BusinessLoanRequestView(generics.CreateAPIView):
-    serializer_class = BusinessLoanRequestSerializer
+    serializer_class = BusinessLoanRequestSerializer    
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -254,5 +259,6 @@ class BusinessLoanRequestView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
 
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)

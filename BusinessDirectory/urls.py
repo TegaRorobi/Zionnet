@@ -1,14 +1,4 @@
 from django.urls import path
-# # from .views import (
-#     TopRatedListingsView, UserListingsView, ListingDetailView
-# )
-
-# urlpatterns = [
-#     path('api/listings/top_rated/', TopRatedListingsView.as_view(), name='top-rated-listings'),
-#     path('api/me/listings/', UserListingsView.as_view(), name='user-listings'),
-#     path('api/listings/<int:pk>/', ListingDetailView.as_view(), name='business-listing')
-# ]
-
 from .views import *
 
 urlpatterns = [
@@ -26,12 +16,12 @@ urlpatterns = [
         name="business_listing_vendor_request",
     ),
     path(
-        "listing-categories/",
+        "categories/",
         BusinessListingCategoryListView.as_view(),
         name="business-categories",
     ),
     path(
-        "listing-categories/popular/",
+        "categories/popular/",
         PopularBusinessListingCategoryListView.as_view(),
         name="popular-category-list",
     ),
@@ -41,19 +31,20 @@ urlpatterns = [
         name="business_loan_request",
     ),
     path(
-        'api/listings/top_rated/', 
-        BusinessListingRatingViewSet.as_view, 
+        "listings/popular/",
+        PopularBusinessListingView.as_view(),
+        name="popular-business-listings",
+    ),
+    path('api/listings/top_rated/', 
+         BusinessListingRatingViewSet.as_view({'get': 'top_rated'}),
         name='top-rated-listings'
     ),
-    path(
-        'api/me/listings/', 
-        UserListingsView.as_view(), 
-        name='user-listings'
+    path('api/me/listings/', 
+         UserListingsView.as_view(), 
+         name='user-listings'
     ),
-    path(
-        'api/listings/<int:pk>/', 
-        ListingDetailView.as_view(), 
-        name='business-listing'
-    ),
+    path('api/listings/<int:pk>/', 
+         ListingDetailView.as_view(), 
+         name='business-listing'
+    )
 ]
-

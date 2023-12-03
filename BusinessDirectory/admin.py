@@ -9,6 +9,7 @@ from .models import (
     BusinessListingSocial,
     BusinessListingReview,
     BusinessLoan,
+    BusinessListingRating,
 )
 
 
@@ -44,3 +45,4 @@ admin.site.register(BusinessListingFile)
 admin.site.register(BusinessListingSocial)
 admin.site.register(BusinessListingReview)
 admin.site.register(BusinessLoan)
+admin.site.register(BusinessListingRating)
