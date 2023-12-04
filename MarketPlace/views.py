@@ -318,6 +318,7 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
         return Product.objects.filter(id=product_id, store__id=store_id)
 
 class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
+    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
     serializer_class = ProductSerializer
 
     def list(self, request, *args, **kwargs):
@@ -327,12 +328,16 @@ class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
         except MarketPlace.DoesNotExist:
             return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
                             status=status.HTTP_404_NOT_FOUND)
+        page = self.paginate_queryset(query)
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.serializer_class(query, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)  
+   
 
-        serializer = self.get_serializer(query, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class ProductSearchApiView(generics.ListAPIView, ProductQuerysetMixin):
+class ProductSearchApiView(generics.GenericAPIView, ProductQuerysetMixin):
+    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
     serializer_class = ProductSearchSerializer
     
     def post(self, request, *args, **kwargs):
@@ -356,7 +361,10 @@ class ProductSearchApiView(generics.ListAPIView, ProductQuerysetMixin):
             if not product_search:
                 return Response({"Message": "No product containing '{}' found!".format(search_query)},
                             status=status.HTTP_404_NOT_FOUND)
-
+            page = self.paginate_queryset(product_search)
+            if page is not None:
+                serializer = ProductSerializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
             serializer = ProductSerializer(product_search, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK) 
     

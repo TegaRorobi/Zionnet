@@ -678,8 +678,8 @@ class StoreProductViewsTest(TestCase):
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]['name'], 'Test Product')
-        self.assertEqual(len(response.data), 1)      
+        self.assertEqual(response.data['results'][0]['name'], 'Test Product')
+        self.assertEqual(len(response.data['results']), 1)      
         
     def test_search_products_no_results(self):
         url = reverse(
