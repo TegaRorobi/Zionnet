@@ -318,7 +318,7 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
         return Product.objects.filter(id=product_id, store__id=store_id)
 
 class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
-    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
+    pagination_class = pagination.PaginatorGenerator()(_page_size=20)
     serializer_class = ProductSerializer
 
     def list(self, request, *args, **kwargs):
@@ -336,7 +336,7 @@ class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)  
 
 class ProductSearchApiView(generics.GenericAPIView, ProductQuerysetMixin):
-    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
+    pagination_class = pagination.PaginatorGenerator()(_page_size=20)
     serializer_class = ProductSerializer
     
     def get(self, request, *args, **kwargs):
