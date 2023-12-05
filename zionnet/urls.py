@@ -32,8 +32,6 @@ urlpatterns = [
     
     # URLconfs
     path('accounts/', include('Accounts.urls')),
-    path('BusinessDirectory/', include('BusinessDirectory.urls')),
-    path('accounts/', include('Accounts.urls')),
     path('api/', include('BusinessDirectory.urls')),
     path('api/', include('MarketPlace.urls')),
 

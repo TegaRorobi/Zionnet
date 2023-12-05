@@ -24,6 +24,7 @@ class BusinessListingRatingViewSet(viewsets.ModelViewSet):
     permission_classes = []
 
     @action(detail=False, methods=['GET'])
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def top_rated(self, request):
         try:
             #Get top 5 listings based on average rating
@@ -60,6 +61,10 @@ class UserListingsView(generics.ListAPIView):
             return BusinessListing.objects.filter(vendor_id=self.request.user.id)
         except Exception as e:
             raise Exception(str(e))
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, request, *args, **kwargs):
+        return super().get(self, request, *args, **kwargs)
         
     
 #endpoint to get a specific business listing
@@ -68,6 +73,7 @@ class ListingDetailView(generics.RetrieveAPIView):
     queryset = BusinessListing.objects.all()
     serializer_class = BusinessListingSerializer
 
+    @swagger_auto_schema(tags=['BusinessDirectory'])
     def get(self, request, *args, **kwargs):
         try:
             return self.retrieve(request, *args, *kwargs)
