@@ -157,11 +157,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
 
-# EMAIL_USE_TLS = True
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
-# EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #noqa
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
