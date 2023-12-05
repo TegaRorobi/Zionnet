@@ -1,4 +1,5 @@
 
+from MarketPlace.mixins import ProductQuerysetMixin
 from rest_framework import (
     generics, viewsets, mixins, decorators, status, permissions
 )
@@ -12,6 +13,7 @@ from .permissions import IsOrderOwner, IsStoreOwner
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from django.utils import timezone
+from django.db.models import Q
 
 
 
@@ -315,6 +317,128 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
         return Product.objects.filter(id=product_id, store__id=store_id)
 
+class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
+    pagination_class = pagination.PaginatorGenerator()(_page_size=20)
+    serializer_class = ProductSerializer
+
+    def list(self, request, *args, **kwargs):
+        marketplace_id = self.kwargs['id']
+        try:
+            query = self.custom_queryset(marketplace_id)
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        page = self.paginate_queryset(query)
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.serializer_class(query, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)  
+
+class ProductSearchApiView(generics.GenericAPIView, ProductQuerysetMixin):
+    pagination_class = pagination.PaginatorGenerator()(_page_size=20)
+    serializer_class = ProductSerializer
+    
+    def get(self, request, *args, **kwargs):
+
+        marketplace_id = kwargs['id'] 
+        search_query = kwargs.get('keyword')
+
+        try:
+            query = self.custom_queryset(marketplace_id)
+            
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+ 
+        if search_query == "''":
+            page = self.paginate_queryset(query)
+            if page is not None:
+                serializer = self.serializer_class(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.serializer_class(query, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        product_search = query.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
+    
+        if not product_search:
+            return Response({"Message": "No product containing '{}' found!".format(search_query)},
+                            status=status.HTTP_404_NOT_FOUND)
+        
+        page = self.paginate_queryset(product_search)
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.serializer_class(product_search, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)   
+    
+
+class ProductRetrieveApiView(generics.ListAPIView, ProductQuerysetMixin):
+    serializer_class = ProductSerializer
+    
+    def get(self, request, *args, **kwargs):
+        marketplace_id = kwargs['id'] 
+        product_id = kwargs['product_id']
+
+        try:
+            query = self.custom_queryset(marketplace_id)
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            retrieve_product = query.get(id=product_id)
+        except query.model.DoesNotExist:
+            return Response({"Message": "Product with id '{}' not found.".format(product_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ProductSerializer(retrieve_product, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)    
+    
+
+class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
+
+    "API Viewset to retrieve, create and delete favourite products of the currently authenticated user"
+
+    pagination_class = pagination.PaginatorGenerator()(_page_size=10)
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FavouriteProductSerializer
+    def get_queryset(self):
+        return FavouriteProduct.objects.filter(
+            user=self.request.user
+        )
+
+    @decorators.action(detail=False)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
+    def retrieve_favourites(self, request, *args, **kwargs):
+        favourites = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(favourites)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(favourites, many=True)
+        return Response(serializer.data)
+
+    @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
+    def add_product_to_favourites(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            favourite = serializer.save(user=self.request.user)
+            headers = self.get_success_headers(serializer.data)
+            success_message = {
+                'message': f'Product \'{str(favourite.product)}\' successfully added to favourites'
+            }
+            return Response({**success_message, **serializer.data}, headers=headers, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Favourites'])
+    def remove_product_from_favourites(self, request, *args, **kwargs):
+        self.get_object().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class GetPopularProductsView(generics.ListAPIView):
     "API View to get all popular products  within a marketplace"
@@ -331,8 +455,6 @@ class GetPopularProductsView(generics.ListAPIView):
 
         # Get all products associated with the market place
         products = Product.objects.filter(store__marketplace=market)
-       
-
 
         # Calculate product popularity based on ratings
         # Filter out products with an average rating of 3.5 or above

@@ -15,11 +15,14 @@ class ProductCategorySerializer(serializers.ModelSerializer):
     marketplace_display = serializers.CharField(
         source='marketplace.__str__', read_only=True
     )
-    marketplace = serializers.HiddenField(default=None)
 
     class Meta:
         model = ProductCategory
         fields = '__all__'
+        extra_kwargs = {
+            'marketplace': {'write_only': True},
+            'marketplace_id': {'read_only': True},
+        }
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -38,12 +41,21 @@ class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = '__all__'
-
+ 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+
+
+class FavouriteProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavouriteProduct
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True}
+        }
 
 
 class StoreVendorSerializer(serializers.ModelSerializer):

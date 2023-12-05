@@ -189,7 +189,7 @@ class GetCartViewTestCase(TestCase):
         User.objects.all().delete()
 
 
-class StoreVendorViewTestCase(TestCase):
+class StoreVendorTestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
@@ -351,7 +351,86 @@ class StoreViewTestCase(TestCase):
         User.objects.all().delete()
 
 
+class FavouriteProductTestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email= 'test@domain.com',password= 'password'
+        )
+        marketplace = MarketPlace.objects.create(
+            name='E-commerce', cover_image='path/to/image.extension'
+        )
+        vendor = StoreVendor.objects.create(
+            user=self.user, email=self.user.email
+        )
+        store = Store.objects.create(
+            marketplace= marketplace,  vendor=vendor, name='Apple',
+            country='US', city='Chicago', province='Stonetown'
+        )
+        product_category = ProductCategory.objects.create(
+            marketplace=marketplace, name='Electronics & Gadgets'
+        )
+        self.product1 = Product.objects.create(
+            store=store, category=product_category,
+            name='Apple Vision Pro', price=3499.99
+        )
+        self.product2 = Product.objects.create(
+            store=store, category=product_category,
+            name='Ergonomic chair', price=2199.99
+        )
+
+    def test_retrieve_favourites_when_empty(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            reverse('MarketPlace:favourite-products-list-create')
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_retrieve_favourites_when_not_empty(self):
+        self.client.force_authenticate(user=self.user)
+        FavouriteProduct.objects.create(user=self.user, product=self.product1)
+        FavouriteProduct.objects.create(user=self.user, product=self.product2)
+        response = self.client.get(
+            reverse('MarketPlace:favourite-products-list-create')
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['count'], 2)
+        self.assertEqual(len(response.json()['results']), 2)
+
+        FavouriteProduct.objects.first().delete()
+        response = self.client.get(
+            reverse('MarketPlace:favourite-products-list-create')
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['count'], 1)
+        self.assertEqual(len(response.json()['results']), 1)
+
+    def test_add_products_to_favourites(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse('MarketPlace:favourite-products-list-create'),
+            data = {'product': self.product1.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['product'], self.product1.id)
+
+    def tearDown(self):
+        FavouriteProduct.objects.all().delete()
+        Product.objects.all().delete()
+        ProductCategory.objects.all().delete()
+        Store.objects.all().delete()
+        MarketPlace.objects.all().delete()
+        User.objects.all().delete()
+
+
 class OrderModelTestCase(TestCase):
+
     def setUp(self):
         # Create a user
         self.user = User.objects.create_user(email='testuser@example.com', password='testpassword')
@@ -400,6 +479,7 @@ class OrderModelTestCase(TestCase):
 
 
 class OrderAPITestCase(APITestCase):
+
     def setUp(self):
         # Create a user
         self.user = User.objects.create_user(email='testuser@example.com', password='testpassword')
@@ -497,6 +577,7 @@ class OrderAPITestCase(APITestCase):
 
 
 class StoreProductViewsTest(TestCase):
+
     def setUp(self):
         self.user = User.objects.create(
             email="test@example.com", password="testpassword"
@@ -573,9 +654,60 @@ class StoreProductViewsTest(TestCase):
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, 204)        
+    
+    def test_get_all_products_in_marketplace_view(self):
+        url = reverse(
+            "MarketPlace:get_all_products",
+            kwargs={'id':self.marketplace.id}, 
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK )
+
+    def test_retrieve_product_in_marketsplace(self):
+        url = reverse(
+            "MarketPlace:retrieve_product",
+            kwargs={'id':self.marketplace.id,'product_id':self.product.id},
+        )  
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], 'Test Product')
+        
+    def test_retrieve_nonexistent_marketplace(self):
+        url = reverse("MarketPlace:retrieve_product", kwargs={'id': 999, 'product_id': self.product.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['Message'], "MarketPlace with id '999' not found.")
+
+    def test_retrieve_nonexistent_product(self):
+        url = reverse("MarketPlace:retrieve_product", kwargs={'id': self.marketplace.id, 'product_id': 999})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['Message'], "Product with id '999' not found.") 
+
+    def test_search_existing_product(self):
+        url = reverse("MarketPlace:search_products", kwargs={'id': self.marketplace.id, 'keyword':'Test Product'})
+        response = self.client.get(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['results'][0]['name'], 'Test Product')
+        self.assertEqual(len(response.data['results']), 1)      
+        
+    def test_search_products_no_results(self):
+        url = reverse(
+            "MarketPlace:search_products",
+            kwargs={'id':self.marketplace.id, 'keyword':'Nonexistent'}, 
+        ) 
+        response = self.client.get(url, format = 'json') 
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['Message'], "No product containing 'Nonexistent' found!")
+        self.assertEqual(len(response.data), 1) 
+
 
 
 class MarketPlaceViewsTest(TestCase):
+
     def setUp(self):
         self.client = APIClient()
         self.marketplace = MarketPlace.objects.create(name='Test Market', cover_image='test_image.jpg')
@@ -651,4 +783,3 @@ class MarketPlaceViewsTest(TestCase):
         url = reverse('MarketPlace:flash_sale_products', kwargs={'pk': self.marketplace.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-   

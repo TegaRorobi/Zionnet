@@ -71,6 +71,28 @@ urlpatterns = [
         StoreProductUpdateView.as_view(),
         name="store-product",
     ),
+    path('marketplace/<int:id>/products/',GetProductsApiView.as_view(),name='get_all_products'),
+    path('marketplace/<int:id>/product/<int:product_id>/',ProductRetrieveApiView.as_view(),name='retrieve_product'),
+    path('marketplace/<int:id>/search/<str:keyword>/',ProductSearchApiView.as_view(),name='search_products'),
+    re_path(
+        '^me/favourites/?$',
+        FavouriteProductView.as_view(
+            {
+                'get': 'retrieve_favourites',
+                'post': 'add_product_to_favourites'
+            }
+        ),
+        name='favourite-products-list-create'
+    ),
+    re_path(
+        '^me/favourites/(?P<pk>\d+)/?$',
+        FavouriteProductView.as_view(
+            {
+                'delete': 'remove_product_from_favourites'
+            }
+        ),
+        name='favourite-product-detail'
+    ),
     path(
         'me/orders/',
         UserOrderListView.as_view(),
