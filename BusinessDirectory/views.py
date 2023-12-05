@@ -1,10 +1,9 @@
 from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from django.http import Http404
 from rest_framework import status, viewsets
-from django.db import models
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -28,14 +27,14 @@ class BusinessListingRatingViewSet(viewsets.ModelViewSet):
     def top_rated(self, request):
         try:
             #Get top 5 listings based on average rating
-            top_listings = BusinessListingRating.objects.values('listing_id') \
+            top_listings = BusinessListingRating.objects.values('listing') \
                 .annotate(avg_rating=models.Avg('value')) \
                 .order_by('-avg_rating')[:5]
 
             if not top_listings:
                 return Response({"error": "No top-rated listings found"}, status=status.HTTP_404_NOT_FOUND)
 
-            listing_ids = [item['listing_id'] for item in top_listings]
+            listing_ids = [item['listing'] for item in top_listings]
             top_listings_data = BusinessListingRating.objects.filter(listing_id__in=listing_ids)
 
             serializer = self.get_serializer(top_listings_data, many=True)
@@ -71,7 +70,7 @@ class ListingDetailView(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            return super().get(request, *args, **kwargs)
+            return self.retrieve(request, *args, *kwargs)
         except Http404:
             return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
