@@ -1,4 +1,5 @@
 
+from MarketPlace.mixins import ProductQuerysetMixin
 from rest_framework import (
     generics, viewsets, mixins, decorators, status, permissions
 )
@@ -12,6 +13,7 @@ from .permissions import IsOrderOwner, IsStoreOwner
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from django.utils import timezone
+from django.db.models import Q
 
 
 
@@ -315,6 +317,85 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
         return Product.objects.filter(id=product_id, store__id=store_id)
 
+class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
+    pagination_class = pagination.PaginatorGenerator()(_page_size=20)
+    serializer_class = ProductSerializer
+
+    def list(self, request, *args, **kwargs):
+        marketplace_id = self.kwargs['id']
+        try:
+            query = self.custom_queryset(marketplace_id)
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        page = self.paginate_queryset(query)
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.serializer_class(query, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)  
+
+class ProductSearchApiView(generics.GenericAPIView, ProductQuerysetMixin):
+    pagination_class = pagination.PaginatorGenerator()(_page_size=20)
+    serializer_class = ProductSerializer
+    
+    def get(self, request, *args, **kwargs):
+
+        marketplace_id = kwargs['id'] 
+        search_query = kwargs.get('keyword')
+
+        try:
+            query = self.custom_queryset(marketplace_id)
+            
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+ 
+        if search_query == "''":
+            page = self.paginate_queryset(query)
+            if page is not None:
+                serializer = self.serializer_class(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.serializer_class(query, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        product_search = query.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
+    
+        if not product_search:
+            return Response({"Message": "No product containing '{}' found!".format(search_query)},
+                            status=status.HTTP_404_NOT_FOUND)
+        
+        page = self.paginate_queryset(product_search)
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.serializer_class(product_search, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)   
+    
+
+class ProductRetrieveApiView(generics.ListAPIView, ProductQuerysetMixin):
+    serializer_class = ProductSerializer
+    
+    def get(self, request, *args, **kwargs):
+        marketplace_id = kwargs['id'] 
+        product_id = kwargs['product_id']
+
+        try:
+            query = self.custom_queryset(marketplace_id)
+        except MarketPlace.DoesNotExist:
+            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            retrieve_product = query.get(id=product_id)
+        except query.model.DoesNotExist:
+            return Response({"Message": "Product with id '{}' not found.".format(product_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ProductSerializer(retrieve_product, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)    
+    
 
 class FavouriteProductView(viewsets.GenericViewSet, mixins.CreateModelMixin):
 

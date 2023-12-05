@@ -1,14 +1,92 @@
+from django.shortcuts import render
+from rest_framework.decorators import action
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from django.http import Http404
+from rest_framework import status, viewsets
 from rest_framework import generics, filters, status
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .permissions import IsVendorVerified
-from django.db.models import Count, Avg
+from django.db.models import Count
 from .pagination import ListingPagination
 from .serializers import *
 from .models import *
+from drf_yasg.utils import swagger_auto_schema
+from .permissions import IsVendorVerified
+from django.db.models import Count, Avg
 
-# Create your views here.
+
+#Endpoint to Retrieve top-rated listings based on average rating
+class BusinessListingRatingViewSet(viewsets.ModelViewSet):
+    queryset = BusinessListingRating.objects.all()
+    serializer_class = BusinessListingRatingSerializer
+    permission_classes = []
+
+    @action(detail=False, methods=['GET'])
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def top_rated(self, request):
+        try:
+            #Get top 5 listings based on average rating
+            top_listings = BusinessListingRating.objects.values('listing') \
+                .annotate(avg_rating=models.Avg('value')) \
+                .order_by('-avg_rating')[:5]
+
+            if not top_listings:
+                return Response({"error": "No top-rated listings found"}, status=status.HTTP_404_NOT_FOUND)
+
+            listing_ids = [item['listing'] for item in top_listings]
+            top_listings_data = BusinessListingRating.objects.filter(listing_id__in=listing_ids)
+
+            serializer = self.get_serializer(top_listings_data, many=True)
+            return Response(serializer.data)
+
+        except Exception as e:
+            error_message = str(e)
+            response = {
+                'status_message': 'error',
+                'message': 'An error occurred: ' + error_message,
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+#Endpoint to Retrieve user listings
+class UserListingsView(generics.ListAPIView):
+    serializer_class = BusinessListingSerializer
+    permission_classes = [IsAuthenticated]
+    # permission_classes = []
+
+    def get_queryset(self):
+        try:
+            return BusinessListing.objects.filter(vendor_id=self.request.user.id)
+        except Exception as e:
+            raise Exception(str(e))
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, request, *args, **kwargs):
+        return super().get(self, request, *args, **kwargs)
+        
+    
+#endpoint to get a specific business listing
+class ListingDetailView(generics.RetrieveAPIView):
+    permission_classes = []
+    queryset = BusinessListing.objects.all()
+    serializer_class = BusinessListingSerializer
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, request, *args, **kwargs):
+        try:
+            return self.retrieve(request, *args, *kwargs)
+        except Http404:
+            return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            error_message = str(e)
+            response = {
+                'status_message': 'error',
+                'message': 'An error occurred: ' + error_message,
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class BusinessListingRequestCreateView(generics.CreateAPIView):

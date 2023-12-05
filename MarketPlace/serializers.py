@@ -41,7 +41,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = '__all__'
-
+ 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:

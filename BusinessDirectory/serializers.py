@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db.models import Avg
 from .models import (
     BusinessListingCategory,
     BusinessListingVendor,
@@ -9,7 +10,20 @@ from .models import (
     BusinessListingSocial,
     BusinessListingReview,
     BusinessLoan,
+    BusinessListingRating
 )
+
+
+class BusinessListingRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusinessListingRating
+        fields = '__all__'
+
+
+class BusinessListingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusinessListing
+        field = '__all__'
 
 
 class BusinessListingVendorSerializer(serializers.ModelSerializer):
