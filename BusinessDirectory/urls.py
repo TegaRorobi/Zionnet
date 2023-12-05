@@ -35,15 +35,15 @@ urlpatterns = [
         PopularBusinessListingView.as_view(),
         name="popular-business-listings",
     ),
-    path('api/listings/top_rated/', 
+    path('listings/top_rated/', 
          BusinessListingRatingViewSet.as_view({'get': 'top_rated'}),
         name='top-rated-listings'
     ),
-    path('api/me/listings/', 
+    path('me/listings/', 
          UserListingsView.as_view(), 
          name='user-listings'
     ),
-    path('api/listings/<int:pk>/', 
+    path('listings/<int:pk>/', 
          ListingDetailView.as_view(), 
          name='business-listing'
     )
