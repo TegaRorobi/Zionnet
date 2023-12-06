@@ -16,7 +16,6 @@ User = get_user_model()
 
 class BusinessListingTests(TestCase):
     def setUp(self):
-        # Create a test user
         self.client = APIClient()
         self.vendor_user = User.objects.create_user(email='testvendor@example.com', password='testpass')
         self.business_listing_vendor = BusinessListingVendor.objects.create(
@@ -25,7 +24,6 @@ class BusinessListingTests(TestCase):
             id_type='NIN',
         )
         category = BusinessListingCategory.objects.create(id=1, name='Your Category Name')
-        # Create some test business listings
         self.listing1 = BusinessListing.objects.create(
             vendor=self.business_listing_vendor,
             category_id=1,
@@ -76,10 +74,10 @@ class BusinessListingTests(TestCase):
 
     def test_user_listings(self):
         self.client.force_authenticate(user=self.vendor_user)
-        url = reverse('user-listings')  # Assuming you've named your URL pattern for UserListingsView
+        url = reverse('user-listings')  
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)  # Adjust this based on your actual data
+        self.assertEqual(len(response.data), 2)  
 
     def test_listing_detail(self):
         url = reverse('business-listing', kwargs={'pk': self.listing1.id})
@@ -88,7 +86,7 @@ class BusinessListingTests(TestCase):
         self.assertEqual(response.data['name'], 'Test Business 1')
 
     def test_listing_detail_not_found(self):
-        url = reverse('business-listing', kwargs={'pk': 999})  # Non-existent ID
+        url = reverse('business-listing', kwargs={'pk': 999})  
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
