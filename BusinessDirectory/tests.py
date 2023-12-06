@@ -3,11 +3,94 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
-from .models import BusinessListingRequest, BusinessListingVendor, BusinessListingCategory
+from .models import BusinessListingRequest, BusinessListingVendor, BusinessListingCategory, BusinessListing, BusinessListingRating
 from PIL import Image
 import tempfile, os
+from django.urls import reverse
+
+
+
+
 
 User = get_user_model()
+
+class BusinessListingTests(TestCase):
+    def setUp(self):
+        # Create a test user
+        self.client = APIClient()
+        self.vendor_user = User.objects.create_user(email='testvendor@example.com', password='testpass')
+        self.business_listing_vendor = BusinessListingVendor.objects.create(
+            user=self.vendor_user,
+            email='testvendor@example.com',
+            id_type='NIN',
+        )
+        category = BusinessListingCategory.objects.create(id=1, name='Your Category Name')
+        # Create some test business listings
+        self.listing1 = BusinessListing.objects.create(
+            vendor=self.business_listing_vendor,
+            category_id=1,
+            name='Test Business 1',
+            description='Description for Test Business 1',
+            country='Test Country',
+            province='Test Province',
+            city='Test City',
+            phone_number='123456789',
+            physical_address='Test Address 1',
+        )
+
+        self.listing2 = BusinessListing.objects.create(
+            vendor=self.business_listing_vendor,
+            category_id=1,
+            name='Test Business 2',
+            description='Description for Test Business 2',
+            country='Test Country',
+            province='Test Province',
+            city='Test City',
+            phone_number='987654321',
+            physical_address='Test Address 2',
+
+        )
+        self.rating1 = BusinessListingRating.objects.create(
+            listing=self.listing1,
+            user=self.vendor_user,
+            value=4
+        )
+
+        self.rating2 = BusinessListingRating.objects.create(
+            listing=self.listing2,
+            user=self.vendor_user,
+            value=5
+        )
+
+    def test_top_rated_listings(self):
+        url = reverse('top-rated-listings')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+    
+    def test_top_rated_listings_no_data(self):
+        BusinessListingRating.objects.all().delete()
+        url = reverse('top-rated-listings')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_user_listings(self):
+        self.client.force_authenticate(user=self.vendor_user)
+        url = reverse('user-listings')  # Assuming you've named your URL pattern for UserListingsView
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # Adjust this based on your actual data
+
+    def test_listing_detail(self):
+        url = reverse('business-listing', kwargs={'pk': self.listing1.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], 'Test Business 1')
+
+    def test_listing_detail_not_found(self):
+        url = reverse('business-listing', kwargs={'pk': 999})  # Non-existent ID
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 class BusinessListingRequestCreateViewTestCase(TestCase):
     def setUp(self):

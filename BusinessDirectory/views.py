@@ -69,17 +69,7 @@ class ListingDetailView(generics.RetrieveAPIView):
     serializer_class = BusinessListingSerializer
 
     def get(self, request, *args, **kwargs):
-        try:
-            return self.retrieve(request, *args, *kwargs)
-        except Http404:
-            return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            error_message = str(e)
-            response = {
-                'status_message': 'error',
-                'message': 'An error occurred: ' + error_message,
-            }
-            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return self.retrieve(request, *args, **kwargs)
 
 
 
