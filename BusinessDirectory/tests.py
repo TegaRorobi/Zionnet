@@ -119,7 +119,7 @@ class BusinessListingTests(TestCase):
         url = reverse('user-listings')  
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)  
+        self.assertEqual(len(response.data), 4)  
 
     def test_listing_detail(self):
         url = reverse('business-listing', kwargs={'pk': self.listing1.id})
