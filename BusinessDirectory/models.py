@@ -1,6 +1,4 @@
 from django.db import models
-# from helpers.models import TrackingModel
-from django.utils import timezone
 from helpers.models import TimestampsModel
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
@@ -52,8 +50,6 @@ class BusinessListing(TimestampsModel):
     city = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
     physical_address = models.CharField(max_length=255)
-    #created_at = models.DateTimeField(default=timezone.now)
-    #updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -124,9 +120,6 @@ class BusinessListingSocial(TimestampsModel):
     listing = models.ForeignKey(
         BusinessListing, on_delete=models.CASCADE, related_name="listing_socials"
     )
-    # created_at = models.DateTimeField(default=timezone.now)
-    # updated_at = models.DateTimeField(auto_now=True)
-
 
     def __str__(self):
         return f"Social for {self.listing.name}"
@@ -143,9 +136,6 @@ class BusinessListingReview(TimestampsModel):
         User, on_delete=models.CASCADE, related_name="listing_reviews"
     )
     comment = models.TextField()
-    # created_at = models.DateTimeField(default=timezone.now)
-    # updated_at = models.DateTimeField(auto_now=True)
-
 
     def __str__(self):
         return f"Review for {self.listing.name}"

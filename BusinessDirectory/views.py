@@ -1,17 +1,13 @@
-from django.shortcuts import render
-from rest_framework.decorators import action
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
-from django.http import Http404
-from rest_framework import status, viewsets
 from rest_framework import generics, filters, status
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .permissions import IsVendorVerified
-from django.db.models import Count
+from django.db.models import Count, Avg
 from .pagination import ListingPagination
 from .serializers import *
 from .models import *
+<<<<<<< HEAD
 from drf_yasg.utils import swagger_auto_schema
 from .permissions import IsVendorVerified
 from django.db.models import Count, Avg, Max
@@ -70,7 +66,10 @@ class ListingDetailView(generics.RetrieveAPIView):
     @swagger_auto_schema(tags=['BusinessDirectory'])
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
+=======
+>>>>>>> 4c87d5b236df75429a33fb18d79b035dc5403190
 
+# Create your views here.
 
 
 class BusinessListingRequestCreateView(generics.CreateAPIView):
