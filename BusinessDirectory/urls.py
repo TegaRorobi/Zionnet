@@ -36,7 +36,7 @@ urlpatterns = [
         PopularBusinessListingView.as_view(),
         name="popular-business-listings",
     ),
-    path('listings/top_rated/', 
+    path('listings/top-rated/', 
         TopRatedListingsAPIView.as_view(),
         name='top-rated-listings'
     ),

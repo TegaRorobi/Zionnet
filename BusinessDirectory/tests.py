@@ -103,7 +103,7 @@ class BusinessListingTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 4)
-        print(response.data)
+        
         
         # ratings = [listing['avg_rating'] for listing in response.data]
         # self.assertEqual(ratings, sorted(ratings, reverse=True))
