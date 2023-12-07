@@ -1,15 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.filters import SearchFilter
 from drf_yasg.utils import swagger_auto_schema
 from .models import *
 from .serializers import *
 
 class JobSearchView(APIView):
     "API View to search for jobs using the job title, the required skills and also category"
-    filter_backends = [SearchFilter]
-    search_fields = ['title', 'category__name', 'required_skills__name']
     @swagger_auto_schema(tags=['JobPosting - search'])
     def post(self, request):
         try:
@@ -38,6 +35,7 @@ class JobSortView(APIView):
     def post(self, request):
         try:
             sort_by = request.data.get('sort_by', None)
+            reverse_order = request.data.get('reverse', False)
             
             if not sort_by:
                 return Response({'error': 'Missing "sort_by" parameter'}, status=status.HTTP_400_BAD_REQUEST)
@@ -48,7 +46,11 @@ class JobSortView(APIView):
                 return Response({'error': f'Invalid "sort_by" field. Valid values: {", ".join(valid_fields)}'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            jobs = JobOpening.objects.order_by(sort_by, '-created_at')  # Sorting before ordering
+            jobs = JobOpening.objects.order_by(sort_by)
+            
+            # reverse the order of sorted jobs data
+            if reverse_order == 'true':
+                jobs = jobs.reverse()
 
             serialized_jobs = JobOpeningSerializer(jobs, many=True)
             return Response({'data': serialized_jobs.data}, status=status.HTTP_200_OK)

@@ -46,7 +46,8 @@ class JobPostingTests(TestCase):
         self.assertEqual(len(response.data['data']), 2)  # Assuming both jobs match the search
 
     def test_job_sort_view(self):
-        response = self.client.post('/api/jobs/sort/', {'sort_by': 'role',})
+        response = self.client.post('/api/jobs/sort/', {'sort_by':
+        'id','reverse':'true'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['data'][0]['title'], 'Test Job 2')
 
