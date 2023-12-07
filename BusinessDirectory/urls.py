@@ -36,7 +36,7 @@ urlpatterns = [
         name="popular-business-listings",
     ),
     path('listings/top_rated/', 
-         BusinessListingRatingViewSet.as_view({'get': 'top_rated'}),
+        TopRatedListingsAPIView.as_view(),
         name='top-rated-listings'
     ),
     path('me/listings/', 
