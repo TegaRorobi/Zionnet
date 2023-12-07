@@ -36,4 +36,16 @@ urlpatterns = [
         PopularBusinessListingView.as_view(),
         name="popular-business-listings",
     ),
+    path('listings/top-rated/', 
+        TopRatedListingsAPIView.as_view(),
+        name='top-rated-listings'
+    ),
+    path('me/listings/', 
+         UserListingsView.as_view(), 
+         name='user-listings'
+    ),
+    path('listings/<int:pk>/', 
+         ListingDetailView.as_view(), 
+         name='business-listing'
+    )
 ]

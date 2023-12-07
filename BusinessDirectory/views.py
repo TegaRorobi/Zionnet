@@ -7,6 +7,65 @@ from django.db.models import Count, Avg
 from .pagination import ListingPagination
 from .serializers import *
 from .models import *
+from drf_yasg.utils import swagger_auto_schema
+from .permissions import IsVendorVerified
+from django.db.models import Count, Avg, Max
+from django.http import Http404
+from rest_framework.permissions import IsAuthenticated
+
+#Endpoint to Retrieve top-rated listings based on average rating
+@swagger_auto_schema(tags=['BusinessDirectory'])
+class TopRatedListingsAPIView(generics.ListAPIView):
+    serializer_class = BusinessListingSerializer
+    permission_classes = []
+
+    def get_queryset(self):
+        return BusinessListing.objects.all().annotate(avg_rating=Avg('ratings__value')).order_by('-avg_rating')
+
+    def list(self, request, *args, **kwargs):
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+
+        except BusinessListing.DoesNotExist:
+            raise Http404("No top-rated listings found")
+
+        except Exception as e:
+            error_message = str(e)
+            response = {
+                'status_message': 'error',
+                'message': 'An error occurred: ' + error_message,
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+#Endpoint to Retrieve user listings
+class UserListingsView(generics.ListAPIView):
+    serializer_class = BusinessListingSerializer
+    permission_classes = [IsAuthenticated]
+    # permission_classes = []
+
+    def get_queryset(self):
+        try:
+            return BusinessListing.objects.filter(vendor_id=self.request.user.id)
+        except Exception as e:
+            raise Exception(str(e))
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, request, *args, **kwargs):
+        return super().get(self, request, *args, **kwargs)
+        
+    
+#endpoint to get a specific business listing
+class ListingDetailView(generics.RetrieveAPIView):
+    permission_classes = []
+    queryset = BusinessListing.objects.all()
+    serializer_class = BusinessListingSerializer
+
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
 
 # Create your views here.
 
