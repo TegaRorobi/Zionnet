@@ -7,11 +7,11 @@ from django.db.models import Count, Avg
 from .pagination import ListingPagination
 from .serializers import *
 from .models import *
-<<<<<<< HEAD
 from drf_yasg.utils import swagger_auto_schema
 from .permissions import IsVendorVerified
 from django.db.models import Count, Avg, Max
-
+from django.http import Http404
+from rest_framework.permissions import IsAuthenticated
 
 #Endpoint to Retrieve top-rated listings based on average rating
 @swagger_auto_schema(tags=['BusinessDirectory'])
@@ -66,8 +66,6 @@ class ListingDetailView(generics.RetrieveAPIView):
     @swagger_auto_schema(tags=['BusinessDirectory'])
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
-=======
->>>>>>> 4c87d5b236df75429a33fb18d79b035dc5403190
 
 # Create your views here.
 
