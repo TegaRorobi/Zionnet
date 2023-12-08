@@ -2,6 +2,7 @@
 from rest_framework import (
     decorators, viewsets, mixins, permissions, status
 )
+from helpers.pagination import PaginatorGenerator
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .permissions import HasFreelancerProfile
@@ -28,6 +29,12 @@ class JobApplicationView(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     serializer_class = JobApplicationSerializer
     permission_classes = [HasFreelancerProfile]
+    pagination_class = PaginatorGenerator()(_page_size=10)
+
+    def get_queryset(self):
+        return JobApplication.objects.filter(
+            applicant = self.request.user.freelancer_profile
+        ).order_by('-updated_at')
 
     @decorators.action(detail=True)
     def create_job_application(self, request, *args, **kwargs):
@@ -37,6 +44,18 @@ class JobApplicationView(viewsets.GenericViewSet, mixins.CreateModelMixin):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, headers=headers, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(detail=False)
+    def get_job_applications(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class JobSearchView(APIView):
