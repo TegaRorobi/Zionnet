@@ -83,3 +83,10 @@ class JobReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobReview
         fields = ['user', 'job', 'comment']
+        
+
+class JobOpeningSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobOpening
+        fields = '__all__'
+
