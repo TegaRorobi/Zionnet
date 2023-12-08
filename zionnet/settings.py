@@ -100,8 +100,6 @@ DATABASES = {
 }
 
 
-
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -157,18 +155,23 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
 }
 
-# EMAIL_USE_TLS = True
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str)
-# EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str)
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #noqa
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
 }
 
-# EMAIL_USE_TLS = True
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str, default='***')
-# EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str, default='***')
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS",
+]
+CORS_ALLOW_HEADERS = [
+    "Accept", "Content-Type", "Authorization",
+]
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = envvar("EMAIL_HOST_USER", cast=str, default='***')
+EMAIL_HOST_PASSWORD = envvar("EMAIL_HOST_PASSWORD", cast=str, default='***')
