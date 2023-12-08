@@ -15,6 +15,11 @@ urlpatterns = [
         JobApplicationView.as_view({'post': 'create_job_application'}),
         name='job-application-create'
     ),
+    re_path(
+        '^me/job-applications/?$',
+        JobApplicationView.as_view({'get': 'get_job_applications'}),
+        name='job-applications-list'
+    ),
     path('jobs/search/', JobSearchView.as_view(), name='job-search'),
     path('jobs/sort/', JobSortView.as_view(), name='job-sort'),
     path('jobs/categories/', JobCategoryView.as_view(), name='job-categories'),
