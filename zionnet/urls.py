@@ -34,6 +34,7 @@ urlpatterns = [
     path('accounts/', include('Accounts.urls')),
     path('api/', include('BusinessDirectory.urls')),
     path('api/', include('MarketPlace.urls')),
+    path('api/', include('JobPosting.urls')),
 
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
     *static(settings.STATIC_URL, document_root=settings.STATIC_ROOT),

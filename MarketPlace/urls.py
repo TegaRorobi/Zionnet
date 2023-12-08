@@ -71,9 +71,6 @@ urlpatterns = [
         StoreProductUpdateView.as_view(),
         name="store-product",
     ),
-    path('marketplace/<int:id>/products/',GetProductsApiView.as_view(),name='get_all_products'),
-    path('marketplace/<int:id>/product/<int:product_id>/',ProductRetrieveApiView.as_view(),name='retrieve_product'),
-    path('marketplace/<int:id>/search/<str:keyword>/',ProductSearchApiView.as_view(),name='search_products'),
     re_path(
         '^me/favourites/?$',
         FavouriteProductView.as_view(
@@ -92,6 +89,21 @@ urlpatterns = [
             }
         ),
         name='favourite-product-detail'
+    ),
+    path(
+        'marketplace/<int:id>/products/',
+        GetProductsApiView.as_view(),
+        name='get_all_products'
+    ),
+    path(
+        'marketplace/<int:id>/product/<int:product_id>/',
+        ProductRetrieveApiView.as_view(),
+        name='retrieve_product'
+    ),
+    path(
+        'marketplace/<int:id>/products/search/<str:keyword>/',
+        ProductSearchApiView.as_view(),
+        name='search_products'
     ),
     path(
         'me/orders/',

@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .views import *
 
 urlpatterns = [
@@ -30,13 +31,13 @@ urlpatterns = [
         BusinessLoanRequestView.as_view(),
         name="business_loan_request",
     ),
-    path(
+       path(
         "listings/popular/",
         PopularBusinessListingView.as_view(),
         name="popular-business-listings",
     ),
-    path('listings/top_rated/', 
-         BusinessListingRatingViewSet.as_view({'get': 'top_rated'}),
+    path('listings/top-rated/', 
+        TopRatedListingsAPIView.as_view(),
         name='top-rated-listings'
     ),
     path('me/listings/', 

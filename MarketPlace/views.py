@@ -321,6 +321,10 @@ class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
     pagination_class = pagination.PaginatorGenerator()(_page_size=20)
     serializer_class = ProductSerializer
 
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
     def list(self, request, *args, **kwargs):
         marketplace_id = self.kwargs['id']
         try:
@@ -338,7 +342,8 @@ class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
 class ProductSearchApiView(generics.GenericAPIView, ProductQuerysetMixin):
     pagination_class = pagination.PaginatorGenerator()(_page_size=20)
     serializer_class = ProductSerializer
-    
+
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def get(self, request, *args, **kwargs):
 
         marketplace_id = kwargs['id'] 
@@ -377,6 +382,7 @@ class ProductSearchApiView(generics.GenericAPIView, ProductQuerysetMixin):
 class ProductRetrieveApiView(generics.ListAPIView, ProductQuerysetMixin):
     serializer_class = ProductSerializer
     
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
     def get(self, request, *args, **kwargs):
         marketplace_id = kwargs['id'] 
         product_id = kwargs['product_id']
