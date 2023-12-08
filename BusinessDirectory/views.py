@@ -19,6 +19,10 @@ class TopRatedListingsAPIView(generics.ListAPIView):
     serializer_class = BusinessListingSerializer
     permission_classes = []
 
+    @swagger_auto_schema(tags=['BusinessDirectory'])
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
     def get_queryset(self):
         return BusinessListing.objects.all().annotate(avg_rating=Avg('ratings__value')).order_by('-avg_rating')
 

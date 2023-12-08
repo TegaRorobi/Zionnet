@@ -2,6 +2,7 @@
 from rest_framework import (
     decorators, viewsets, mixins, permissions, status
 )
+from drf_yasg.utils import swagger_auto_schema
 from helpers.pagination import PaginatorGenerator
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,6 +17,7 @@ class FreelancerProfileView(viewsets.GenericViewSet, mixins.CreateModelMixin):
     permission_classes = [permissions.IsAuthenticated]
 
     @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['JobPosting'])
     def create_freelancer_profile(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -37,6 +39,7 @@ class JobApplicationView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         ).order_by('-updated_at')
 
     @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['JobPosting'])
     def create_job_application(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -46,6 +49,7 @@ class JobApplicationView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.action(detail=False)
+    @swagger_auto_schema(tags=['JobPosting'])
     def get_job_applications(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
@@ -59,7 +63,10 @@ class JobApplicationView(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
 
 class JobSearchView(APIView):
+
     "API View to search for jobs using the job title, the required skills and also category"
+
+    @swagger_auto_schema(tags=['JobPosting'])
     def post(self, request):
         try:
             title = request.data.get('title', None)
@@ -82,7 +89,10 @@ class JobSearchView(APIView):
 
 
 class JobSortView(APIView):
+
     "API View to sort jobs using the meta fields and return a response ordered by the latest job"
+
+    @swagger_auto_schema(tags=['JobPosting'])
     def post(self, request):
         try:
             sort_by = request.data.get('sort_by', None)
@@ -111,8 +121,10 @@ class JobSortView(APIView):
             
 
 class JobCategoryView(APIView):
+
     "API View to get all jobs categories "
     
+    @swagger_auto_schema(tags=['JobPosting'])
     def get(self, request):
         try:
             categories = JobCategory.objects.all()
@@ -124,7 +136,10 @@ class JobCategoryView(APIView):
 
 
 class GetJobsByCategory(APIView):
+
     "API View to get a job belonging to a category"
+
+    @swagger_auto_schema(tags=['JobPosting'])
     def get(self, request, category_id):
         try:
             category = JobCategory.objects.get(pk=category_id)
