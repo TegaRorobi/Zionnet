@@ -109,6 +109,23 @@ class JobApplicationViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_get_job_applications(self):
+        self.client.force_authenticate(user=self.user)
+        
+        job_application = JobApplication.objects.create(
+            applicant=self.user.freelancer_profile,
+            job_opening=self.job_opening,
+            first_name='John', last_name='Doe',
+            email='johndoe@lorem.ipsum'
+        )
+
+        response = self.client.get(reverse('JobPosting:job-applications-list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertEqual(response.json()['count'], 1)
+        self.assertEqual(response.json()['results'][0]['id'], job_application.id)
+
     def tearDown(self):
         JobApplication.objects.all().delete()
         JobOpening.objects.all().delete()
