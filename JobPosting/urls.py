@@ -1,8 +1,20 @@
-from django.urls import path
+
+from django.urls import re_path, path
 from .views import *
 
 app_name = 'JobPosting'
+
 urlpatterns = [
+    re_path(
+        '^freelancer/create/?$', 
+        FreelancerProfileView.as_view({'post': 'create_freelancer_profile'}),
+        name='freelancer-profile-create'
+    ),
+    re_path(
+        '^me/job-application/create/?$',
+        JobApplicationView.as_view({'post': 'create_job_application'}),
+        name='job-application-create'
+    ),
     path('jobs/search/', JobSearchView.as_view(), name='job-search'),
     path('jobs/sort/', JobSortView.as_view(), name='job-sort'),
     path('jobs/categories/', JobCategoryView.as_view(), name='job-categories'),

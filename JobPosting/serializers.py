@@ -1,10 +1,13 @@
+
 from rest_framework import serializers
 from .models import *
+
 
 class CompanySocialLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanySocialLink
         fields = ['social_name', 'social_link']
+
 
 class CompanySerializer(serializers.ModelSerializer):
     social_links = CompanySocialLinkSerializer(many=True, read_only=True)
@@ -20,29 +23,36 @@ class JobSkillSerializer(serializers.ModelSerializer):
         model = JobSkill
         fields = ['name']
 
+
 class JobRoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobRole
         fields = ['name']
+
 
 class JobCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = JobCategory
         fields = ['name']
 
+
 class FreelancerSocialLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = FreelancerSocialLink
         fields = ['social_name', 'social_link']
 
+
 class FreelancerProfileSerializer(serializers.ModelSerializer):
-    skills = JobSkillSerializer(many=True, read_only=True)
-    social_links = FreelancerSocialLinkSerializer(many=True, read_only=True)
+    skills = JobSkillSerializer(many=True, required=False)
+    social_links = FreelancerSocialLinkSerializer(many=True, required=False)
 
     class Meta:
         model = FreelancerProfile
-        fields = ['id', 'user', 'skills', 'title', 'bio', 'profile_pic', 'banner_image', 'resume',
-                  'preferred_time_commitment', 'preferred_presence_type', 'experience_range', 'social_links']
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only':True},
+        }
+
 
 class JobOpeningSerializer(serializers.ModelSerializer):
     required_skills = JobSkillSerializer(many=True, read_only=True)
@@ -53,18 +63,23 @@ class JobOpeningSerializer(serializers.ModelSerializer):
                   'time_commitment', 'presence_type', 'experience_range', 'required_skills', 'resumption_date',
                   'contract_period', 'hourly_rate', 'hourly_rate_currency']
 
+
 class JobApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobApplication
-        fields = ['id', 'job_opening', 'applicant', 'first_name', 'last_name', 'email', 'phone_number', 'application_info', 'resume']
+        fields = '__all__'
+        extra_kwargs = {
+            'applicant': {'read_only':True}
+        }
+
 
 class JobRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobRating
         fields = ['value', 'user', 'job_opening']
 
+
 class JobReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobReview
         fields = ['user', 'job', 'comment']
-        
