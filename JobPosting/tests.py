@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
+
+from Accounts.models import CustomUser
 from .models import *
 
 User = get_user_model()
@@ -197,3 +199,83 @@ class JobPosting_Search_Sort_and_GetByCategoryTestCase(TestCase):
         for obj in objects_to_delete:
             if hasattr(obj, 'id'):
                 obj.delete()
+
+class CompanyJobsTests(TestCase):
+    def setUp(self):
+        # Create a user for the company poster
+        self.user = CustomUser.objects.create(email='test_user@example.com')
+
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+        
+        # Create job-related objects
+        self.job_role = JobRole.objects.create(name='Test Role')
+        self.job_category = JobCategory.objects.create(name='Test Category')
+        self.job_skill = JobSkill.objects.create(name='Test Skill')
+
+        # Create a company
+        self.company = Company.objects.create(
+            name='Test Company',
+            description='A test company',
+            website='http://example.com',
+            logo=None,
+            country='Test Country',
+            city='Test City',
+            employee_number_range='1-10'
+        )
+
+        # Create a job opening
+        self.job_data = {
+            'company': self.company.id,
+            'role': self.job_role.id,
+            'category': self.job_category.id,
+            'poster': self.user.id,
+            'title': 'Software Engineer',
+            'description': 'Exciting job opportunity...',
+            'time_commitment': 'full-time',
+            'presence_type': 'remote',
+            'experience_range': '2-5',
+            'resumption_date': '2023-12-31',
+            'contract_period': '30 days',
+            'hourly_rate': 50,
+            'hourly_rate_currency': '$',
+        }
+
+    def test_post_job(self):
+        url = reverse('JobPosting:post-job')
+
+        # Create a sample Company instance with required fields
+        company_data = {
+            'name': 'Test Company',
+            'description': 'Test description',
+            'website': 'http://www.testcompany.com',
+            'logo': None,
+            'country': 'Test Country',
+            'city': 'Test City',
+            'employee_number_range': '1-10',
+        }
+        company = Company.objects.create(**company_data)
+
+        # Update the job_data to include the company's ID
+        self.job_data['company'] = company.id
+
+        response = self.client.post(url, self.job_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_all_companies(self):
+        url = reverse('JobPosting:company-list')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_top_companies(self):
+        url = reverse('JobPosting:top-companies')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_jobs_in_company(self):
+        url = reverse('JobPosting:company-jobs', kwargs={'company_id': self.company.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

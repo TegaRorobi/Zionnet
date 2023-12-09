@@ -1,6 +1,6 @@
 
 from rest_framework import (
-    decorators, viewsets, mixins, permissions, status
+    decorators, viewsets, mixins, permissions, status, generics
 )
 from drf_yasg.utils import swagger_auto_schema
 from helpers.pagination import PaginatorGenerator
@@ -151,3 +151,48 @@ class GetJobsByCategory(APIView):
         return Response({'data': serialized_jobs.data},
         status=status.HTTP_200_OK)
         
+
+class CompanyListView(APIView):
+    """ A view for retrieving all companies """
+    @swagger_auto_schema(tags=['JobPosting'])
+    def get(self, request, *args, **kwargs):
+        companies = Company.objects.all()
+        serializer = CompanySerializer(companies, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class TopCompaniesView(APIView):
+    """A view to retrieve companies with the highest number of employees"""
+
+    @swagger_auto_schema(tags=['JobPosting'])
+    def get(self, request, *args, **kwargs):
+        top_companies = Company.objects.order_by('-employee_number_range')
+        serializer = CompanySerializer(top_companies, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class PostJobView(generics.CreateAPIView):
+    """ This endpoint allows users to create a new job opening."""
+    queryset = JobOpening.objects.all()
+    serializer_class = JobOpeningSerializer
+
+    @swagger_auto_schema(tags=['JobPosting'])
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+    
+    def create(self, request, *args, **kwargs):
+        # Add the poster (user) information to the request data
+        request.data['poster'] = request.user.id
+
+        response = super().create(request, *args, **kwargs)
+        return response
+    
+class CompanyJobsView(APIView):
+    """A view for retrieving jobs posted in a company """
+
+    @swagger_auto_schema(tags=['JobPosting'])
+    def get(self, request, *args, **kwargs):
+        company_id = kwargs.get('company_id')
+        if company_id is not None:
+            jobs = JobOpening.objects.filter(company__id=company_id)
+            serializer = JobOpeningSerializer(jobs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'error': 'Company ID is required'}, status=status.HTTP_400_BAD_REQUEST)
