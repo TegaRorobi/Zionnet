@@ -197,3 +197,103 @@ class JobPosting_Search_Sort_and_GetByCategoryTestCase(TestCase):
         for obj in objects_to_delete:
             if hasattr(obj, 'id'):
                 obj.delete()
+
+
+class Job_BestMatch_MostRecent_and_Featured_Tests(TestCase):
+
+    def setUp(self):
+        # Create a user and log them in
+        self.user = User.objects.create_user(email='testuser@gmail.com', password='testpassword')
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+        self.freelancer_profile = FreelancerProfile.objects.create(
+            user=self.user,
+            title='Software Engineer',
+        )
+
+        # Create some job-related objects for testing
+        company = Company.objects.create(
+            name='Test Company',
+            description='Test Company Description',
+            website='http://www.testcompany.com',
+            country='Test Country',
+            city='Test City',
+            employee_number_range='11-50'
+        )
+
+        role = JobRole.objects.create(name='Test Role')
+        category = JobCategory.objects.create(name='Test Category')
+        skill1 = JobSkill.objects.create(name='Skill 1')
+        skill2 = JobSkill.objects.create(name='Skill 2')
+        skill3 = JobSkill.objects.create(name='Skill 3')
+
+        self.job1 = JobOpening.objects.create(
+            company=company,
+            role=role,
+            category=category,
+            poster=self.user,
+            poster_positon='Test Position 1',
+            title='Job 1',
+            description='Description 1',
+            time_commitment='full-time',
+            presence_type='remote',
+            experience_range='2-5',
+            resumption_date='2023-01-01',
+            hourly_rate=50,
+        )
+        self.job1.required_skills.add(skill1, skill2)
+
+        self.job2 = JobOpening.objects.create(
+            company=company,
+            role=role,
+            category=category,
+            poster=self.user,
+            poster_positon='Test Position 2',
+            title='Job 2',
+            description='Description 2',
+            time_commitment='part-time',
+            presence_type='on-site',
+            experience_range='5-10',
+            resumption_date='2023-02-01',
+            hourly_rate=75,
+            featured=True,
+        )
+        self.job2.required_skills.add(skill2, skill3)
+
+        self.job3 = JobOpening.objects.create(
+            company=company,
+            role=role,
+            category=category,
+            poster=self.user,
+            poster_positon='Test Position 3',
+            title='Job 3',
+            description='Description 3',
+            time_commitment='contract',
+            presence_type='hybrid',
+            experience_range='0-2',
+            resumption_date='2023-03-01',
+            hourly_rate=60,
+        )
+        self.job3.required_skills.add(skill1, skill3)
+
+    def test_get_featured_jobs(self):
+        response = self.client.get('/api/jobs/featured/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)  
+
+    def test_get_best_match_jobs(self):
+        response = self.client.get('/api/jobs/best-match/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_most_recent_jobs(self):
+        response = self.client.get('/api/jobs/most-recent/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3) 
+
+    def tearDown(self):
+        objects_to_delete = [self.job1, self.job2, self.job3]
+
+        for obj in objects_to_delete:
+            if hasattr(obj, 'id'):
+                obj.delete()
+

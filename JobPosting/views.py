@@ -165,5 +165,6 @@ class BestMatchJobsAPIView(generics.ListAPIView):
         queryset = JobOpening.objects.filter(required_skills__in=freelancer_skills).distinct()
         return queryset
 class MostRecentJobsAPIView(generics.ListAPIView):
-    queryset = JobOpening.objects.order_by('-created_at')[:10]
+    queryset = JobOpening.objects.order_by('-created_at')
     serializer_class = JobOpeningSerializer
+    pagination_class = PaginatorGenerator()(_page_size=10)
