@@ -89,14 +89,18 @@ class BusinessListing(TimestampsModel):
     physical_address = models.CharField(max_length=255)
 
     def save(self, *args, **kwargs):
+        if hasattr(self, 'listing_request') is False:
+            raise ValidationError('This listing does not have an associated listing request')
         if self.listing_request.is_approved is False:
             raise ValidationError('This listing cannot be saved, as it\'s request is not yet approved.')
         if not (
             hasattr(self.listing_request.user, 'business_listing_vendor_profile') and (
-                self.listing_request.user.business_listing_vendor_profile != self.vendor
+                self.listing_request.user.business_listing_vendor_profile == self.vendor
             )
         ):
             raise ValidationError('This listing\'s request was not created by the selected vendor.')
+        if self.listing_request.listing_category != self.category:
+            raise ValidationError('There\'s a category mismatch between the listing request and the intended listing')
     
         return super().save()
 

@@ -1,20 +1,24 @@
-from django.urls import path
 
+from django.urls import path
 from .views import *
+
+app_name='BusinessDirectory'
 
 urlpatterns = [
     path(
-        "listings/", BusinessListingListCreateView.as_view(), name="business-listings"
+        "listings/", 
+        BusinessListingListCreateView.as_view(), 
+        name="business-listings"
     ),
     path(
         "listings/request/",
         BusinessListingRequestCreateView.as_view(),
-        name="business_listing_request",
+        name="business-listing-request",
     ),
     path(
         "listings/vendor/request/",
         BusinessListingVendorRequestCreateView.as_view(),
-        name="business_listing_vendor_request",
+        name="business-listing-vendor-request",
     ),
     path(
         "categories/",
@@ -29,9 +33,9 @@ urlpatterns = [
     path(
         "listings/loan/request/",
         BusinessLoanRequestView.as_view(),
-        name="business_loan_request",
+        name="business-loan-request",
     ),
-       path(
+    path(
         "listings/popular/",
         PopularBusinessListingView.as_view(),
         name="popular-business-listings",

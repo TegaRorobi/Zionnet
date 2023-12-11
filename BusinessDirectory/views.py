@@ -83,7 +83,7 @@ class BusinessListingRequestCreateView(generics.CreateAPIView):
         return super().post(*args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(vendor=self.request.user)
+        serializer.save(user=self.request.user)
 
 
 class BusinessListingVendorRequestCreateView(generics.CreateAPIView):
