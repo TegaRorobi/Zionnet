@@ -28,6 +28,5 @@ class FileSizeValidator:
 def validate_positive_decimal(value):
     if value < 0:
         raise ValidationError(
-            _('%(value)s is not a positive decimal'),
-            params={'value': value},
+            _(f'{value} is not a positive decimal')
         )
