@@ -1,6 +1,7 @@
 from django.db import models
 from helpers.models import TimestampsModel
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from helpers.fields import ValidatedImageField
@@ -20,11 +21,13 @@ class BusinessListingCategory(TimestampsModel):
 
 
 class BusinessListingVendor(TimestampsModel):
+
     ID_TYPE_CHOICES = [
         ('NIN', 'NIN'),
         ("Driver's License", "Driver's License"),
         ("Voter's Card", "Voter's Card")
     ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='business_listing_vendor_profile')
     email = models.EmailField(_('vendor email address'))
     id_type = models.CharField(_('id type'), max_length=30, choices=ID_TYPE_CHOICES)
@@ -37,8 +40,42 @@ class BusinessListingVendor(TimestampsModel):
         return 'Business Listing Vendor: ' + self.email.__str__()
 
 
+class BusinessListingRequest(TimestampsModel):
+
+    ID_TYPE_CHOICES = [
+        ("type_1", "Type 1"),
+        ("type_2", "Type 2")
+    ]
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="listing_requests"
+    )
+    listing_category = models.ForeignKey(
+        BusinessListingCategory, on_delete=models.CASCADE, related_name="listing_requests",
+    )
+    id_type = models.CharField(
+        max_length=20, choices=ID_TYPE_CHOICES,
+    )
+    id_front = models.FileField(
+        upload_to="business_listing_request_id_front", null=True, blank=True
+    )
+    id_back = models.FileField(
+        upload_to="business_listing_request_id_back", null=True, blank=True
+    )
+    is_approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Business listing Request by {self.vendor.user.__str__()}"
+
+
 class BusinessListing(TimestampsModel):
-    vendor = models.ForeignKey(BusinessListingVendor, on_delete=models.CASCADE, related_name="listings")
+
+    vendor = models.ForeignKey(
+        BusinessListingVendor, on_delete=models.CASCADE, related_name="listings"
+    )
+    listing_request = models.OneToOneField(
+        BusinessListingRequest, related_name='listing', on_delete=models.PROTECT
+    )
     category = models.ForeignKey(
         BusinessListingCategory, on_delete=models.CASCADE, related_name="listings"
     )
@@ -51,7 +88,23 @@ class BusinessListing(TimestampsModel):
     phone_number = models.CharField(max_length=20)
     physical_address = models.CharField(max_length=255)
 
-    def __str__(self):
+    def save(self, *args, **kwargs):
+        if hasattr(self, 'listing_request') is False:
+            raise ValidationError('This listing does not have an associated listing request')
+        if self.listing_request.is_approved is False:
+            raise ValidationError('This listing cannot be saved, as it\'s request is not yet approved.')
+        if not (
+            hasattr(self.listing_request.user, 'business_listing_vendor_profile') and (
+                self.listing_request.user.business_listing_vendor_profile == self.vendor
+            )
+        ):
+            raise ValidationError('This listing\'s request was not created by the selected vendor.')
+        if self.listing_request.listing_category != self.category:
+            raise ValidationError('There\'s a category mismatch between the listing request and the intended listing')
+    
+        return super().save()
+
+    def __str__(self, *args, **kwargs):
         return self.name
 
 
@@ -65,34 +118,6 @@ class BusinessListingRating(TimestampsModel):
     value = models.PositiveSmallIntegerField(
         default=5, validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
-
-
-class BusinessListingRequest(TimestampsModel):
-    vendor = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="listing_request"
-    )
-    listing_category = models.ForeignKey(
-        BusinessListingCategory,
-        on_delete=models.CASCADE,
-        related_name="listing_request",
-    )
-    id_type = models.CharField(
-        max_length=20,
-        choices=[
-            ("type_1", "Type 1"),
-            ("type_2", "Type 2"),
-        ],
-    )
-    id_front = models.FileField(
-        upload_to="business_listing_request_id_front", null=True, blank=True
-    )
-    id_back = models.FileField(
-        upload_to="business_listing_request_id_back", null=True, blank=True
-    )
-    is_approved = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Request by {self.vendor.first_name}"
 
 
 class BusinessListingImage(TimestampsModel):

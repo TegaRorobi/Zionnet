@@ -24,4 +24,8 @@ urlpatterns = [
     path('jobs/sort/', JobSortView.as_view(), name='job-sort'),
     path('jobs/categories/', JobCategoryView.as_view(), name='job-categories'),
     path('jobs/categories/<int:category_id>/jobs/', GetJobsByCategory.as_view(), name='jobs-in-category'),
+    path('companies/', CompanyListView.as_view(), name='company-list'),
+    path('companies/top/', TopCompaniesView.as_view(), name='top-companies'),
+    path('company/job/post/', PostJobView.as_view(), name='post-job'),
+    path('company/job/<int:company_id>/', CompanyJobsView.as_view(), name='company-jobs'),
 ]
