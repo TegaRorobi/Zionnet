@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from .permissions import HasFreelancerProfile
 from .serializers import *
 from .models import *
+from rest_framework import generics
 
 
 class FreelancerProfileView(viewsets.GenericViewSet, mixins.CreateModelMixin):
@@ -151,6 +152,38 @@ class GetJobsByCategory(APIView):
         return Response({'data': serialized_jobs.data},
         status=status.HTTP_200_OK)
         
+
+class FeaturedJobsAPIView(generics.ListAPIView):
+    queryset = JobOpening.objects.filter(featured=True)
+    serializer_class = JobOpeningSerializer
+
+class BestMatchJobsAPIView(generics.ListAPIView):
+    serializer_class = JobOpeningSerializer
+
+    def get_queryset(self):
+        freelancer_skills = self.request.user.freelancer_profile.skills.all()
+        queryset = JobOpening.objects.filter(required_skills__in=freelancer_skills).distinct()
+        return queryset
+class MostRecentJobsAPIView(generics.ListAPIView):
+    queryset = JobOpening.objects.order_by('-created_at')
+    serializer_class = JobOpeningSerializer
+    pagination_class = PaginatorGenerator()(_page_size=10)
+
+class FeaturedJobsAPIView(generics.ListAPIView):
+    queryset = JobOpening.objects.filter(featured=True)
+    serializer_class = JobOpeningSerializer
+
+class BestMatchJobsAPIView(generics.ListAPIView):
+    serializer_class = JobOpeningSerializer
+
+    def get_queryset(self):
+        freelancer_skills = self.request.user.freelancer_profile.skills.all()
+        queryset = JobOpening.objects.filter(required_skills__in=freelancer_skills).distinct()
+        return queryset
+class MostRecentJobsAPIView(generics.ListAPIView):
+    queryset = JobOpening.objects.order_by('-created_at')
+    serializer_class = JobOpeningSerializer
+    pagination_class = PaginatorGenerator()(_page_size=10)
 
 class CompanyListView(APIView):
     """ A view for retrieving all companies """

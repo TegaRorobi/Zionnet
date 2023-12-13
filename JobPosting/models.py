@@ -182,6 +182,7 @@ class JobOpening(TimestampsModel):
     hourly_rate = models.IntegerField(_('hourly rate'), null=True, blank=True)
     hourly_rate_currency = models.CharField(_('hourly rate currency'), max_length=1, default='$')
 
+    featured = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
