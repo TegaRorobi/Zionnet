@@ -59,10 +59,10 @@ class JobOpeningSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JobOpening
-        fields = ['id', 'company', 'role', 'category', 'poster', 'poster_positon', 'title', 'description',
-                  'time_commitment', 'presence_type', 'experience_range', 'required_skills', 'resumption_date',
-                  'contract_period', 'hourly_rate', 'hourly_rate_currency']
-
+        fields = '__all__'
+        extra_kwargs = {
+            'featured': {'required':False}
+        }
 
 class JobApplicationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,8 +85,4 @@ class JobReviewSerializer(serializers.ModelSerializer):
         fields = ['user', 'job', 'comment']
         
 
-class JobOpeningSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = JobOpening
-        fields = '__all__'
 

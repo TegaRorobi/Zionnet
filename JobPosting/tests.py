@@ -368,16 +368,16 @@ class Job_BestMatch_MostRecent_and_Featured_Tests(TestCase):
         self.job3.required_skills.add(skill1, skill3)
 
     def test_get_featured_jobs(self):
-        response = self.client.get('/api/jobs/featured/')
+        response = self.client.get(reverse('JobPosting:featured-jobs'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)  
 
     def test_get_best_match_jobs(self):
-        response = self.client.get('/api/jobs/best-match/')
+        response = self.client.get(reverse('JobPosting:best-match-jobs'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_most_recent_jobs(self):
-        response = self.client.get('/api/jobs/most-recent/')
+        response = self.client.get(reverse('JobPosting:most-recent-jobs'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 3) 
 
