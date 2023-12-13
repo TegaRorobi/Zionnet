@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 from .permissions import HasFreelancerProfile
 from .serializers import *
 from .models import *
-from rest_framework import generics
 
 
 class FreelancerProfileView(viewsets.GenericViewSet, mixins.CreateModelMixin):
@@ -157,33 +156,33 @@ class FeaturedJobsAPIView(generics.ListAPIView):
     queryset = JobOpening.objects.filter(featured=True)
     serializer_class = JobOpeningSerializer
 
+    @swagger_auto_schema(tags=['JobPosting'])
+    def get(self, request, *args, **kwargs):
+        return super().get(self, request, *args, **kwargs)
+
+
 class BestMatchJobsAPIView(generics.ListAPIView):
     serializer_class = JobOpeningSerializer
+
+    @swagger_auto_schema(tags=['JobPosting'])
+    def get(self, request, *args, **kwargs):
+        return super().get(self, request, *args, **kwargs)
 
     def get_queryset(self):
         freelancer_skills = self.request.user.freelancer_profile.skills.all()
         queryset = JobOpening.objects.filter(required_skills__in=freelancer_skills).distinct()
         return queryset
+
+
 class MostRecentJobsAPIView(generics.ListAPIView):
     queryset = JobOpening.objects.order_by('-created_at')
     serializer_class = JobOpeningSerializer
     pagination_class = PaginatorGenerator()(_page_size=10)
 
-class FeaturedJobsAPIView(generics.ListAPIView):
-    queryset = JobOpening.objects.filter(featured=True)
-    serializer_class = JobOpeningSerializer
+    @swagger_auto_schema(tags=['JobPosting'])
+    def get(self, request, *args, **kwargs):
+        return super().get(self, request, *args, **kwargs)
 
-class BestMatchJobsAPIView(generics.ListAPIView):
-    serializer_class = JobOpeningSerializer
-
-    def get_queryset(self):
-        freelancer_skills = self.request.user.freelancer_profile.skills.all()
-        queryset = JobOpening.objects.filter(required_skills__in=freelancer_skills).distinct()
-        return queryset
-class MostRecentJobsAPIView(generics.ListAPIView):
-    queryset = JobOpening.objects.order_by('-created_at')
-    serializer_class = JobOpeningSerializer
-    pagination_class = PaginatorGenerator()(_page_size=10)
 
 class CompanyListView(APIView):
     """ A view for retrieving all companies """
@@ -192,7 +191,8 @@ class CompanyListView(APIView):
         companies = Company.objects.all()
         serializer = CompanySerializer(companies, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
 class TopCompaniesView(APIView):
     """A view to retrieve companies with the highest number of employees"""
 
@@ -201,7 +201,8 @@ class TopCompaniesView(APIView):
         top_companies = Company.objects.order_by('-employee_number_range')
         serializer = CompanySerializer(top_companies, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
 class PostJobView(generics.CreateAPIView):
     """ This endpoint allows users to create a new job opening."""
     queryset = JobOpening.objects.all()
@@ -217,7 +218,8 @@ class PostJobView(generics.CreateAPIView):
 
         response = super().create(request, *args, **kwargs)
         return response
-    
+
+
 class CompanyJobsView(APIView):
     """A view for retrieving jobs posted in a company """
 
