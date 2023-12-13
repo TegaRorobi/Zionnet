@@ -28,4 +28,7 @@ urlpatterns = [
     path('companies/top/', TopCompaniesView.as_view(), name='top-companies'),
     path('company/job/post/', PostJobView.as_view(), name='post-job'),
     path('company/job/<int:company_id>/', CompanyJobsView.as_view(), name='company-jobs'),
+    path('jobs/featured/', FeaturedJobsAPIView.as_view(), name='featured-jobs'),
+    path('jobs/best-match/', BestMatchJobsAPIView.as_view(), name='best-match-jobs'),
+    path('jobs/most-recent/', MostRecentJobsAPIView.as_view(), name='most-recent-jobs'),
 ]
