@@ -219,8 +219,10 @@ class BusinessListingVendorRequestCreateViewTestCase(TestCase):
             'id_back': self.image_tempfile2
         }
 
-        response = self.client.post('/api/listings/vendor/request/', data, format='multipart')
-
+        response = self.client.post(
+            reverse('BusinessDirectory:business-listing-vendor-request'),
+            data=data, format='multipart'
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(BusinessListingVendor.objects.count(), 1)
         self.assertEqual(BusinessListingVendor.objects.first().user, self.user)
@@ -233,7 +235,10 @@ class BusinessListingVendorRequestCreateViewTestCase(TestCase):
             'id_back': self.image_tempfile2
         }
 
-        response = self.client.post('/api/listings/vendor/request/', data, format='multipart')
+        response = self.client.post(
+            reverse('BusinessDirectory:business-listing-vendor-request'),
+            data=data, format='multipart'
+        )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 

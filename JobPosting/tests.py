@@ -173,23 +173,32 @@ class JobPosting_Search_Sort_and_GetByCategoryTestCase(TestCase):
         )
 
     def test_job_search_view(self):
-        response = self.client.post('/api/jobs/search/', {'title': 'Test'})
+        response = self.client.post(
+            reverse('JobPosting:job-search'),
+            data = {'title': 'Test'}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['data']), 2)  # Assuming both jobs match the search
 
     def test_job_sort_view(self):
-        response = self.client.post('/api/jobs/sort/', {'sort_by':
-        'id','reverse':'true'})
+        response = self.client.post(
+            reverse('JobPosting:job-sort'),
+            data = {'sort_by':'id','reverse':'true'}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['data'][0]['title'], 'Test Job 2')
 
     def test_job_category_view(self):
-        response = self.client.get('/api/jobs/categories/')
+        response = self.client.get(
+            reverse('JobPosting:job-categories'),
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['data']), 1)  # Assuming only one category is created
 
     def test_get_jobs_by_category_view(self):
-        response = self.client.get('/api/jobs/categories/1/jobs/')  # Assuming the first category has id=1
+        response = self.client.get(
+            reverse('JobPosting:jobs-in-category', kwargs={'category_id':1}),   # Assuming the first category has id=1
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['data']), 2)  # Assuming both jobs are in the specified Category
 
