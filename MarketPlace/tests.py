@@ -139,6 +139,30 @@ class CartViewTestCase(TestCase):
         self.product.refresh_from_db()
         self.assertEqual(self.product.quantity, 5)
 
+    def test_remove_cart_item(self):
+        self.client.force_authenticate(user=self.user)
+
+        cartitem1 = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        cartitem2 = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        #NOQA!! Will definitely be changed later, so this happens in the save() method
+        self.product.quantity -= 10;self.product.save(); self.product.refresh_from_db()
+
+        response = self.client.delete(
+            reverse('MarketPlace:remove-cart-item', kwargs={'pk':cartitem1.id}),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.user.cart.items.count(), 1)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 5)
+
+        response = self.client.delete(
+            reverse('MarketPlace:remove-cart-item', kwargs={'pk':cartitem2.id}),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.user.cart.items.count(), 0)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 10)
+
     def test_add_cart_item_invalid_quantity(self):
         self.client.force_authenticate(user=self.user)
 
