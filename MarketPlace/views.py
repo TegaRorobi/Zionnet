@@ -120,6 +120,17 @@ class CartView(viewsets.GenericViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+    @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Cart'])
+    def remove_cart_item(self, request, *args, **kwargs):
+        "API Viewset action to remove an item from the currently authenticated user's cart"
+        cartitem = self.get_object()
+        cartitem.product.quantity += cartitem.quantity
+        cartitem.product.save()
+        cartitem.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
     @decorators.action(detail=False)
     @swagger_auto_schema(tags=['MarketPlace - Cart'])
     def get_user_cart_items(self, request, *args, **kwargs):
