@@ -216,7 +216,7 @@ class FlashSale(TimestampsModel):
 
     def __str__(self) -> str:
         return f"Flash Sale for {self.product.name} - {self.discount_percentage}% off"
-    
+
     @property
     def is_available(self):
         now = timezone.now()
