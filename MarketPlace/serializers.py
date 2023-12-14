@@ -34,13 +34,36 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    product_details = serializers.JSONField(source='_product_details')
-    discounted_price = serializers.DecimalField(source='_discounted_price', max_digits=20, decimal_places=2)
-    actual_price = serializers.DecimalField(source='_actual_price', max_digits=20, decimal_places=2)
+    product_details = serializers.JSONField(
+        source='_product_details', read_only=True
+    )
+    discounted_price = serializers.DecimalField(
+        source='_discounted_price', max_digits=20, decimal_places=2, read_only=True
+    )
+    actual_price = serializers.DecimalField(
+        source='_actual_price', max_digits=20, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = CartItem
         fields = '__all__'
+        extra_kwargs = {
+            'cart': {'read_only':True},
+        }
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        product, quantity = attrs['product'], attrs['quantity']
+        if product.quantity >= quantity:
+            product.quantity -= quantity
+            product.save()
+            return attrs
+        else:
+            raise serializers.ValidationError({
+                'quantity': f'Invalid quantity: {quantity}. Product \'{product.__str__()}\' has a quantity of {product.quantity}.'
+            })
+
+
  
 
 class ProductSerializer(serializers.ModelSerializer):

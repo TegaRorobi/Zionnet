@@ -173,7 +173,7 @@ class CartItem(TimestampsModel):
     @property
     def _actual_price(self):
         return self.product.price * self.quantity
-    
+
     @property
     def _discounted_price(self):
         return self.product.discounted_price * self.quantity
