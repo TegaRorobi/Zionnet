@@ -115,6 +115,11 @@ urlpatterns = [
         ProductSearchApiView.as_view(),
         name='search_products'
     ),
+    re_path(
+        '^products/rate/?$',
+        RateProductView.as_view(),
+        name='rate-product'
+    ),
     path(
         'me/orders/',
         UserOrderListView.as_view(),
@@ -135,7 +140,7 @@ urlpatterns = [
         name='cancel_order'
     ),
     path(
-        'marketplace/<int:pk>/products/popular', 
+        'marketplace/<int:pk>/products/popular/', 
         GetPopularProductsView.as_view(),
         name='marketplace-products-popular'
     ),
