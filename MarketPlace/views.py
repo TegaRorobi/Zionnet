@@ -156,22 +156,6 @@ class CartView(viewsets.GenericViewSet):
         }, status=status.HTTP_204_NO_CONTENT)
 
 
-class StoreVendorView(viewsets.GenericViewSet, mixins.CreateModelMixin):
-
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = StoreVendorSerializer
-
-    @decorators.action(detail=True)
-    @swagger_auto_schema(tags=['MarketPlace - Stores'])
-    def create_store_vendor_request(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user, is_approved=False)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, headers=headers, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
 
     "API Viewset to perform CRUD operations on the store(s) of the currently authenticated user"
@@ -235,6 +219,38 @@ class StoreView(viewsets.GenericViewSet, mixins.CreateModelMixin):
             {'message': 'Store successfully deleted.'}, 
             status=status.HTTP_204_NO_CONTENT
         )
+
+
+class StoreVendorView(viewsets.GenericViewSet, mixins.CreateModelMixin):
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = StoreVendorSerializer
+
+    @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Stores'])
+    def create_store_vendor_request(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, is_approved=False)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, headers=headers, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RateProductView(generics.GenericAPIView):
+
+    "API View for to rate products"
+
+    serializer_class = ProductRatingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(tags=['MarketPlace - Products'])
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=self.request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserOrderListView(generics.ListAPIView):
@@ -613,8 +629,9 @@ class FlashSaleProductsView(generics.ListAPIView):
                 serialized_flash_sales = self.serializer_class(queryset, many=True)
                 return Response(serialized_flash_sales.data, status=status.HTTP_200_OK)
             else:
-                return Response(
-                  {'error': f'No flash sales found for products of MarketPlace with {self.lookup_field} 'f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} exist'
+                return Response({
+                    'error': f'No flash sales found for products of MarketPlace with {self.lookup_field} '
+                             f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} exist'
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
@@ -622,8 +639,7 @@ class FlashSaleProductsView(generics.ListAPIView):
         except MarketPlace.DoesNotExist:
             # Handle the exception when market doesn't exist 
             return Response({
-                'error': f'MarketPlace with {self.lookup_field} '
-                         f'{kwargs[self.lookup_url_kwarg or self.lookup_field]} does not exist'
+                'error': f'MarketPlace with {self.lookup_field} {kwargs[self.lookup_url_kwarg or self.lookup_field]} does not exist'
             }, status=status.HTTP_404_NOT_FOUND)
 
 
