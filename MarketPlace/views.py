@@ -1,19 +1,21 @@
 
-from MarketPlace.mixins import ProductQuerysetMixin
 from rest_framework import (
     generics, viewsets, mixins, decorators, status, permissions
 )
-from .permissions import IsApprovedStoreVendor
+from .permissions import (
+    IsApprovedStoreVendor, IsOrderOwner, IsStoreOwner
+)
 from rest_framework.response import Response
-from django.db.models import Count,Avg
-from helpers import pagination
-from .serializers import *
-from .models import *
-from .permissions import IsOrderOwner, IsStoreOwner
+from django.db.models import Count, Avg, Q
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from django.utils import timezone
-from django.db.models import Q
+
+from helpers import pagination
+from .mixins import ProductQuerysetMixin
+from .serializers import *
+from .models import *
+
 
 
 
@@ -88,7 +90,7 @@ class CartView(viewsets.GenericViewSet):
     def get_serializer_class(self):
         if self.action=='get_user_cart':
             return CartSerializer
-        elif self.action=='get_user_cart_items':
+        elif self.action in ['get_user_cart_items', 'add_cart_item']:
             return CartItemSerializer
 
     @decorators.action(detail=True)
@@ -99,6 +101,23 @@ class CartView(viewsets.GenericViewSet):
         serializer = self.get_serializer(cart, many=False)
         data = {**serializer.data, **{'new_cart':created}}
         return Response(data, status=status.HTTP_200_OK)
+
+
+    @decorators.action(detail=True)
+    @swagger_auto_schema(tags=['MarketPlace - Cart'])
+    def add_cart_item(self, request, *args, **kwargs):
+        "API Viewset action to add an item to the currently authenticated user's cart"
+        cart, created = Cart.objects.get_or_create(owner=request.user)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            # print(serializer.validated_data)
+            # product, quantity = serializer.validated_data.values()
+            # if product.quantity >= quantity:
+            #     product.quantity -= quantity
+            #     product.save()
+            serializer.save(cart=cart)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
     @decorators.action(detail=False)
@@ -112,7 +131,7 @@ class CartView(viewsets.GenericViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
+
 
     @decorators.action(detail=False)
     @swagger_auto_schema(tags=['MarketPlace - Cart'])
@@ -242,6 +261,7 @@ class UpdateOrderView(generics.UpdateAPIView):
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
+
 class CancelOrderView(generics.DestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -317,6 +337,7 @@ class StoreProductUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
         return Product.objects.filter(id=product_id, store__id=store_id)
 
+
 class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
     pagination_class = pagination.PaginatorGenerator()(_page_size=20)
     serializer_class = ProductSerializer
@@ -330,14 +351,16 @@ class GetProductsApiView(generics.ListAPIView, ProductQuerysetMixin):
         try:
             query = self.custom_queryset(marketplace_id)
         except MarketPlace.DoesNotExist:
-            return Response({"Message": "MarketPlace with id '{}' not found.".format(marketplace_id)},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "message": f"MarketPlace with id '{marketplace_id}' not found."
+            }, status=status.HTTP_404_NOT_FOUND)
         page = self.paginate_queryset(query)
         if page is not None:
             serializer = self.serializer_class(page, many=True)
             return self.get_paginated_response(serializer.data)
         serializer = self.serializer_class(query, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)  
+
 
 class ProductSearchApiView(generics.GenericAPIView, ProductQuerysetMixin):
     pagination_class = pagination.PaginatorGenerator()(_page_size=20)
@@ -377,7 +400,7 @@ class ProductSearchApiView(generics.GenericAPIView, ProductQuerysetMixin):
         
         serializer = self.serializer_class(product_search, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)   
-    
+
 
 class ProductRetrieveApiView(generics.ListAPIView, ProductQuerysetMixin):
     serializer_class = ProductSerializer
