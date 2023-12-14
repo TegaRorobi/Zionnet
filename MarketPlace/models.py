@@ -173,16 +173,16 @@ class CartItem(TimestampsModel):
     @property
     def _actual_price(self):
         return self.product.price * self.quantity
-    
+
     @property
     def _discounted_price(self):
         return self.product.discounted_price * self.quantity
 
-    def delete(self, *args, **kwargs): # noqa
-        # return the product(s) to the shelves
-        self.product.quantity += self.quantity
-        self.product.save()
-        return super().delete(*args, **kwargs)
+    # def delete(self, *args, **kwargs): # noqa
+    #     # return the product(s) to the shelves
+    #     self.product.quantity += self.quantity
+    #     self.product.save()
+    #     return super().delete(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"Cart item: {self.quantity} nos of '{self.product.__str__()}'"
@@ -216,7 +216,7 @@ class FlashSale(TimestampsModel):
 
     def __str__(self) -> str:
         return f"Flash Sale for {self.product.name} - {self.discount_percentage}% off"
-    
+
     @property
     def is_available(self):
         now = timezone.now()

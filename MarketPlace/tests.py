@@ -96,7 +96,7 @@ class GetProductCategoriesTestCase(TestCase):
         User.objects.all().delete()
 
 
-class GetCartViewTestCase(TestCase):
+class CartViewTestCase(TestCase):
     
     def setUp(self):
         self.client = APIClient()
@@ -121,6 +121,66 @@ class GetCartViewTestCase(TestCase):
             name='Apple Vision Pro', quantity=10, price=3499.99
         )
         self.cart = Cart.objects.create(owner=self.user)
+
+    def test_add_cart_item(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse('MarketPlace:add-cart-item'),
+            data = {
+                'product': self.product.id,
+                'quantity': 5
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.user.cart.items.count(), 1)
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 5)
+
+    def test_remove_cart_item(self):
+        self.client.force_authenticate(user=self.user)
+
+        cartitem1 = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        cartitem2 = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        #NOQA!! Will definitely be changed later, so this happens in the save() method
+        self.product.quantity -= 10;self.product.save(); self.product.refresh_from_db()
+
+        response = self.client.delete(
+            reverse('MarketPlace:remove-cart-item', kwargs={'pk':cartitem1.id}),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.user.cart.items.count(), 1)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 5)
+
+        response = self.client.delete(
+            reverse('MarketPlace:remove-cart-item', kwargs={'pk':cartitem2.id}),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.user.cart.items.count(), 0)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 10)
+
+    def test_add_cart_item_invalid_quantity(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse('MarketPlace:add-cart-item'),
+            data = {
+                'product': self.product.id,
+                'quantity': 999
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertIn('quantity', response.json())
+        self.assertEqual(self.user.cart.items.count(), 0)
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 10)
 
     def test_get_user_cart_when_empty(self):
         Cart.objects.all().delete()
@@ -245,6 +305,53 @@ class StoreVendorTestCase(TestCase):
         StoreVendor.objects.all().delete()
         User.objects.all().delete()
 
+
+class RateProductViewTestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email='test@domain.com', password='password'
+        )
+        marketplace = MarketPlace.objects.create(
+            name='E-commerce', cover_image='path/to/image.extension'
+        )
+        vendor = StoreVendor.objects.create(
+            user=self.user, email=self.user.email
+        )
+        store = Store.objects.create(
+            marketplace= marketplace,  vendor=vendor, name='Apple',
+            country='US', city='Chicago', province='Stonetown'
+        )
+        product_category = ProductCategory.objects.create(
+            marketplace=marketplace, name='Electronics & Gadgets'
+        )
+        self.product = Product.objects.create(
+            store=store, category=product_category,
+            name='Apple Vision Pro', quantity=10, price=3499.99
+        )
+
+    def test_rate_product(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse('MarketPlace:rate-product'),
+            data = {
+                'product': self.product.id,
+                'value': 5
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.product.ratings.count(), 1)
+
+    def tearDown(self):
+        ProductRating.objects.all().delete()
+        Product.objects.all().delete()
+        ProductCategory.objects.all().delete()
+        Store.objects.all().delete()
+        MarketPlace.objects.all().delete()
+        User.objects.all().delete()
 
 class StoreViewTestCase(TestCase):
 
@@ -703,7 +810,6 @@ class StoreProductViewsTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data['Message'], "No product containing 'Nonexistent' found!")
         self.assertEqual(len(response.data), 1) 
-
 
 
 class MarketPlaceViewsTest(TestCase):
