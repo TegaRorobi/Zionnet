@@ -306,6 +306,53 @@ class StoreVendorTestCase(TestCase):
         User.objects.all().delete()
 
 
+class RateProductViewTestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email='test@domain.com', password='password'
+        )
+        marketplace = MarketPlace.objects.create(
+            name='E-commerce', cover_image='path/to/image.extension'
+        )
+        vendor = StoreVendor.objects.create(
+            user=self.user, email=self.user.email
+        )
+        store = Store.objects.create(
+            marketplace= marketplace,  vendor=vendor, name='Apple',
+            country='US', city='Chicago', province='Stonetown'
+        )
+        product_category = ProductCategory.objects.create(
+            marketplace=marketplace, name='Electronics & Gadgets'
+        )
+        self.product = Product.objects.create(
+            store=store, category=product_category,
+            name='Apple Vision Pro', quantity=10, price=3499.99
+        )
+
+    def test_rate_product(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse('MarketPlace:rate-product'),
+            data = {
+                'product': self.product.id,
+                'value': 5
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.product.ratings.count(), 1)
+
+    def tearDown(self):
+        ProductRating.objects.all().delete()
+        Product.objects.all().delete()
+        ProductCategory.objects.all().delete()
+        Store.objects.all().delete()
+        MarketPlace.objects.all().delete()
+        User.objects.all().delete()
+
 class StoreViewTestCase(TestCase):
 
     def setUp(self):
