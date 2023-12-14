@@ -64,13 +64,19 @@ class CartItemSerializer(serializers.ModelSerializer):
             })
 
 
- 
-
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
 
+
+class ProductRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductRating
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True},
+        }
 
 class FavouriteProductSerializer(serializers.ModelSerializer):
     class Meta:
