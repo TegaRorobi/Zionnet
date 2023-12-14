@@ -96,7 +96,7 @@ class GetProductCategoriesTestCase(TestCase):
         User.objects.all().delete()
 
 
-class GetCartViewTestCase(TestCase):
+class CartViewTestCase(TestCase):
     
     def setUp(self):
         self.client = APIClient()
@@ -121,6 +121,42 @@ class GetCartViewTestCase(TestCase):
             name='Apple Vision Pro', quantity=10, price=3499.99
         )
         self.cart = Cart.objects.create(owner=self.user)
+
+    def test_add_cart_item(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse('MarketPlace:add-cart-item'),
+            data = {
+                'product': self.product.id,
+                'quantity': 5
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.user.cart.items.count(), 1)
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 5)
+
+    def test_add_cart_item_invalid_quantity(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse('MarketPlace:add-cart-item'),
+            data = {
+                'product': self.product.id,
+                'quantity': 999
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(hasattr(response, 'json'))
+        self.assertIn('quantity', response.json())
+        self.assertEqual(self.user.cart.items.count(), 0)
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 10)
 
     def test_get_user_cart_when_empty(self):
         Cart.objects.all().delete()
@@ -703,7 +739,6 @@ class StoreProductViewsTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data['Message'], "No product containing 'Nonexistent' found!")
         self.assertEqual(len(response.data), 1) 
-
 
 
 class MarketPlaceViewsTest(TestCase):
