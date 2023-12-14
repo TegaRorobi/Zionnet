@@ -178,11 +178,11 @@ class CartItem(TimestampsModel):
     def _discounted_price(self):
         return self.product.discounted_price * self.quantity
 
-    def delete(self, *args, **kwargs): # noqa
-        # return the product(s) to the shelves
-        self.product.quantity += self.quantity
-        self.product.save()
-        return super().delete(*args, **kwargs)
+    # def delete(self, *args, **kwargs): # noqa
+    #     # return the product(s) to the shelves
+    #     self.product.quantity += self.quantity
+    #     self.product.save()
+    #     return super().delete(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"Cart item: {self.quantity} nos of '{self.product.__str__()}'"
