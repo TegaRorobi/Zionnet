@@ -40,6 +40,11 @@ urlpatterns = [
         name='add-cart-item'
     ),
     re_path(
+        '^me/cart/remove-item/(?P<pk>\d+)/?$',
+        CartView.as_view({'delete':'remove_cart_item'}),
+        name='remove-cart-item'
+    ),
+    re_path(
         '^stores/vendor/request/?$',
         StoreVendorView.as_view({'post':'create_store_vendor_request'}),
         name='store-vendor-request-create'
