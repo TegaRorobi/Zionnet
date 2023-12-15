@@ -110,11 +110,6 @@ class CartView(viewsets.GenericViewSet):
         cart, created = Cart.objects.get_or_create(owner=request.user)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            # print(serializer.validated_data)
-            # product, quantity = serializer.validated_data.values()
-            # if product.quantity >= quantity:
-            #     product.quantity -= quantity
-            #     product.save()
             serializer.save(cart=cart)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -124,10 +119,7 @@ class CartView(viewsets.GenericViewSet):
     @swagger_auto_schema(tags=['MarketPlace - Cart'])
     def remove_cart_item(self, request, *args, **kwargs):
         "API Viewset action to remove an item from the currently authenticated user's cart"
-        cartitem = self.get_object()
-        cartitem.product.quantity += cartitem.quantity
-        cartitem.product.save()
-        cartitem.delete()
+        self.get_object().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
