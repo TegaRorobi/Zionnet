@@ -51,17 +51,6 @@ class CartItemSerializer(serializers.ModelSerializer):
             'cart': {'read_only':True},
         }
 
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-        product, quantity = attrs['product'], attrs['quantity']
-        if product.quantity >= quantity:
-            product.quantity -= quantity
-            product.save()
-            return attrs
-        else:
-            raise serializers.ValidationError({
-                'quantity': f'Invalid quantity: {quantity}. Product \'{product.__str__()}\' has a quantity of {product.quantity}.'
-            })
 
 
 class ProductSerializer(serializers.ModelSerializer):
