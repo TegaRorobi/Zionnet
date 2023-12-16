@@ -2,10 +2,10 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from helpers import *
 from django.utils import timezone
-from helpers.validators import validate_positive_decimal
+from helpers import *
 
 User = get_user_model()
 
@@ -150,10 +150,20 @@ class Cart(TimestampsModel):
         return 'Cart owned by ' + self.owner.__str__()
 
 
+class CartItemQueryset(models.query.QuerySet):
+    def delete(self, *args, **kwargs):
+        for cartitem in self.all():
+            cartitem.product.quantity += cartitem.quantity
+            cartitem.product.save()
+        return super().delete(*args, **kwargs)
+
+
 class CartItem(TimestampsModel):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, related_name='cartitems', on_delete=models.CASCADE)
-    quantity = models.IntegerField(_('number of products'), default=1)
+    quantity = models.IntegerField(_('number of products'), validators=[MinValueValidator(0)], default=1)
+
+    objects = models.manager.BaseManager.from_queryset(CartItemQueryset)()
 
     @property
     def _product_details(self):
@@ -178,11 +188,48 @@ class CartItem(TimestampsModel):
     def _discounted_price(self):
         return self.product.discounted_price * self.quantity
 
-    # def delete(self, *args, **kwargs): # noqa
-    #     # return the product(s) to the shelves
-    #     self.product.quantity += self.quantity
-    #     self.product.save()
-    #     return super().delete(*args, **kwargs)
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
+        invalid_quantity = ValidationError(
+            {
+            'quantity': f'Invalid quantity: {self.quantity}. Product \'{self.product.__str__()}\' '
+                        f'has a quantity of {self.product.quantity}.'
+            }
+        )
+        if bool(self.pk) is True:
+            # functionality to check if the quantity is updated, from when last this object was saved and
+            # then make the corresponding increase or decrease to the product's available quantity.
+            original = self.__class__.objects.get(pk=self.pk)
+            quantity_was_updated = original.quantity != self.quantity
+            if quantity_was_updated:
+                if self.quantity < 0:
+                    raise invalid_quantity
+                difference = original.quantity - self.quantity
+                if self.product.quantity + difference < 0:
+                    raise invalid_quantity
+                self.product.quantity += difference
+                self.product.save()
+
+        else:
+            # take the product(s) from the shelves
+            if self.product.quantity < self.quantity:
+                raise invalid_quantity
+            self.product.quantity -= self.quantity
+            self.product.save()
+
+        super().save(
+            using=using,
+            force_insert=force_insert,
+            force_update=force_update,
+            update_fields=update_fields,
+        )
+
+    def delete(self, *args, **kwargs): # noqa
+        # return the product(s) to the shelves
+        self.product.quantity += self.quantity
+        self.product.save()
+        return super().delete(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"Cart item: {self.quantity} nos of '{self.product.__str__()}'"

@@ -1,4 +1,5 @@
 from rest_framework.test import APIClient, APITestCase
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from django.test import TestCase
@@ -31,6 +32,116 @@ class GetAllMarketPlacesTestCase(TestCase):
     
     def tearDown(self):
         MarketPlace.objects.all().delete()
+
+
+class CartItem_Product_RelationshipTestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email= 'test@domain.com',password= 'password'
+        )
+        self.cart = Cart.objects.create(
+            owner=self.user
+        )
+        marketplace = MarketPlace.objects.create(
+            name='E-commerce', cover_image='path/to/image.extension'
+        )
+        vendor = StoreVendor.objects.create(
+            user=self.user, email=self.user.email
+        )
+        store = Store.objects.create(
+            marketplace= marketplace,  vendor=vendor, name='Apple',
+            country='US', city='Chicago', province='Stonetown'
+        )
+        product_category = ProductCategory.objects.create(
+            marketplace=marketplace, name='Electronics & Gadgets'
+        )
+        self.product = Product.objects.create(
+            store=store, category=product_category,
+            name='Apple Vision Pro', price=3499.99,
+            quantity=10
+        )
+
+    def test_product_quantity_decreases_accordingly_when_cartitem_created(self):
+        CartItem.objects.create(cart=self.cart, product=self.product, quantity=4)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 6)
+
+    def test_throws_error_on_attempt_to_create_cartitem_with_invalid_quantity(self):
+        with self.assertRaises(ValidationError):
+            CartItem.objects.create(cart=self.cart, product=self.product, quantity=99)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 10)
+        self.assertEqual(CartItem.objects.count(), 0)
+
+    def test_product_quantity_increases_accordingly_when_cartitem_deleted(self):
+        cartitem = CartItem.objects.create(cart=self.cart, product=self.product, quantity=3)
+        q1 = cartitem.quantity
+
+        self.product.refresh_from_db()
+        q2 = self.product.quantity
+
+        cartitem.delete()
+
+        self.product.refresh_from_db()
+        q3 = self.product.quantity
+
+        self.assertEqual(q1+q2, q3)
+
+    def test_product_quantity_increases_accordingly_when_cartitems_deleted(self):
+        c1 = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        c2 = CartItem.objects.create(cart=self.cart, product=self.product, quantity=3)
+        q1 = c1.quantity + c2.quantity
+
+        self.product.refresh_from_db()
+        q2 = self.product.quantity
+
+        CartItem.objects.all().delete()
+
+        self.product.refresh_from_db()
+        q3 = self.product.quantity
+
+        self.assertEqual(q1, q3-q2)
+
+    def test_product_quantity_changes_accordingly_when_cartitem_quantity_increased(self):
+        cartitem = CartItem.objects.create(cart=self.cart, product=self.product, quantity=4)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 6)
+        cartitem.quantity = 3
+        cartitem.save()
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 7)
+
+    def test_product_quantity_changes_accordingly_when_cartitem_quantity_decreased(self):
+        cartitem = CartItem.objects.create(cart=self.cart, product=self.product, quantity=4)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 6)
+        cartitem.quantity = 9
+        cartitem.save()
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, 1)
+
+    def test_throws_error_on_attempt_to_update_cartitem_with_invalid_high_quantity(self):
+        cartitem = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        with self.assertRaises(ValidationError):
+            cartitem.quantity = 99
+            cartitem.save()
+
+    def test_throws_error_on_attempt_to_update_cartitem_with_invalid_low_quantity(self):
+        cartitem = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
+        with self.assertRaises(ValidationError):
+            cartitem.quantity = -10
+            cartitem.save()
+
+    def tearDown(self):
+        CartItem.objects.all().delete()
+        Cart.objects.all().delete()
+        Product.objects.all().delete()
+        ProductCategory.objects.all().delete()
+        Store.objects.all().delete()
+        MarketPlace.objects.all().delete()
+        User.objects.all().delete()
 
 
 class GetProductCategoriesTestCase(TestCase):
@@ -97,7 +208,7 @@ class GetProductCategoriesTestCase(TestCase):
 
 
 class CartViewTestCase(TestCase):
-    
+
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
@@ -144,8 +255,6 @@ class CartViewTestCase(TestCase):
 
         cartitem1 = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
         cartitem2 = CartItem.objects.create(cart=self.cart, product=self.product, quantity=5)
-        #NOQA!! Will definitely be changed later, so this happens in the save() method
-        self.product.quantity -= 10;self.product.save(); self.product.refresh_from_db()
 
         response = self.client.delete(
             reverse('MarketPlace:remove-cart-item', kwargs={'pk':cartitem1.id}),
@@ -160,25 +269,6 @@ class CartViewTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(self.user.cart.items.count(), 0)
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.quantity, 10)
-
-    def test_add_cart_item_invalid_quantity(self):
-        self.client.force_authenticate(user=self.user)
-
-        response = self.client.post(
-            reverse('MarketPlace:add-cart-item'),
-            data = {
-                'product': self.product.id,
-                'quantity': 999
-            }
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(hasattr(response, 'json'))
-        self.assertIn('quantity', response.json())
-        self.assertEqual(self.user.cart.items.count(), 0)
-
         self.product.refresh_from_db()
         self.assertEqual(self.product.quantity, 10)
 
@@ -240,8 +330,8 @@ class CartViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def tearDown(self):
-        Cart.objects.all().delete()
         CartItem.objects.all().delete()
+        Cart.objects.all().delete()
         Product.objects.all().delete()
         ProductCategory.objects.all().delete()
         Store.objects.all().delete()
@@ -352,6 +442,7 @@ class RateProductViewTestCase(TestCase):
         Store.objects.all().delete()
         MarketPlace.objects.all().delete()
         User.objects.all().delete()
+
 
 class StoreViewTestCase(TestCase):
 
