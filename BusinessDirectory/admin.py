@@ -1,16 +1,5 @@
 from django.contrib import admin
-from django.forms import inlineformset_factory
-from .models import (
-    BusinessListingCategory,
-    BusinessListing,
-    BusinessListingRequest,
-    BusinessListingImage,
-    BusinessListingFile,
-    BusinessListingSocial,
-    BusinessListingReview,
-    BusinessLoan,
-    BusinessListingRating,
-)
+from .models import *
 
 
 class BusinessListingImageInline(admin.TabularInline):
@@ -37,12 +26,12 @@ class BusinessListingAdmin(admin.ModelAdmin):
 
 
 admin.site.register(BusinessListing, BusinessListingAdmin)
-
 admin.site.register(BusinessListingCategory)
+admin.site.register(BusinessListingVendor)
 admin.site.register(BusinessListingRequest)
 admin.site.register(BusinessListingImage)
 admin.site.register(BusinessListingFile)
 admin.site.register(BusinessListingSocial)
 admin.site.register(BusinessListingReview)
-admin.site.register(BusinessLoan)
 admin.site.register(BusinessListingRating)
+admin.site.register(BusinessLoan)

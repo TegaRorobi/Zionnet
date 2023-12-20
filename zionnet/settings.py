@@ -29,7 +29,7 @@ SECRET_KEY = envvar("SECRET_KEY", cast=str, default='django_secret_key')
 DEBUG = envvar("DEBUG", cast=bool, default=True)
 
 split_env_str = lambda v: [s.strip() for s in v.split(",")]
-ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str, default="127.0.0.1")
+ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str, default="127.0.0.1,localhost,0.0.0.0")
 
 AUTH_USER_MODEL = "Accounts.CustomUser"
 # Application definition

@@ -35,6 +35,16 @@ urlpatterns = [
         name='user-cart-dump'
     ),
     re_path(
+        '^me/cart/add-item/?$',
+        CartView.as_view({'post': 'add_cart_item'}),
+        name='add-cart-item'
+    ),
+    re_path(
+        '^me/cart/remove-item/(?P<pk>\d+)/?$',
+        CartView.as_view({'delete':'remove_cart_item'}),
+        name='remove-cart-item'
+    ),
+    re_path(
         '^stores/vendor/request/?$',
         StoreVendorView.as_view({'post':'create_store_vendor_request'}),
         name='store-vendor-request-create'
@@ -105,6 +115,11 @@ urlpatterns = [
         ProductSearchApiView.as_view(),
         name='search_products'
     ),
+    re_path(
+        '^products/rate/?$',
+        RateProductView.as_view(),
+        name='rate-product'
+    ),
     path(
         'me/orders/',
         UserOrderListView.as_view(),
@@ -125,7 +140,7 @@ urlpatterns = [
         name='cancel_order'
     ),
     path(
-        'marketplace/<int:pk>/products/popular', 
+        'marketplace/<int:pk>/products/popular/', 
         GetPopularProductsView.as_view(),
         name='marketplace-products-popular'
     ),

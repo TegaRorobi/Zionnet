@@ -68,11 +68,12 @@ class BusinessListingSerializer(serializers.ModelSerializer):
 
 
 class BusinessListingRequestSerializer(serializers.ModelSerializer):
-    vendor = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
     class Meta:
         model = BusinessListingRequest
         fields = "__all__"
+        extra_kwargs = {
+            'user': {'read_only':True}
+        }
 
 
 class BusinessListingSerializer(serializers.ModelSerializer):

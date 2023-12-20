@@ -34,20 +34,38 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    product_details = serializers.JSONField(source='_product_details')
-    discounted_price = serializers.DecimalField(source='_discounted_price', max_digits=20, decimal_places=2)
-    actual_price = serializers.DecimalField(source='_actual_price', max_digits=20, decimal_places=2)
+    product_details = serializers.JSONField(
+        source='_product_details', read_only=True
+    )
+    discounted_price = serializers.DecimalField(
+        source='_discounted_price', max_digits=20, decimal_places=2, read_only=True
+    )
+    actual_price = serializers.DecimalField(
+        source='_actual_price', max_digits=20, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = CartItem
         fields = '__all__'
- 
+        extra_kwargs = {
+            'cart': {'read_only':True},
+        }
+
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
 
+
+class ProductRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductRating
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True},
+        }
 
 class FavouriteProductSerializer(serializers.ModelSerializer):
     class Meta:
