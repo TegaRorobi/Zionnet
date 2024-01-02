@@ -29,4 +29,5 @@ typing_extensions==4.8.0
 tzdata==2023.3
 uritemplate==4.1.1
 urllib3==2.1.0
+waitress==2.1.2
 whitenoise==6.5.0
