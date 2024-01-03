@@ -19,6 +19,7 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+split_env_str = lambda v: [s.strip() for s in v.split(",")]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -29,10 +30,18 @@ SECRET_KEY = envvar("SECRET_KEY", cast=str, default='django_secret_key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = envvar("DEBUG", cast=bool, default=True)
 
-split_env_str = lambda v: [s.strip() for s in v.split(",")]
-ALLOWED_HOSTS = envvar("ALLOWED_HOSTS", cast=split_env_str, default="127.0.0.1,localhost,0.0.0.0")
+ALLOWED_HOSTS = envvar(
+    "ALLOWED_HOSTS", cast=split_env_str,
+    default="127.0.0.1,localhost,0.0.0.0"
+)
+
+CSRF_TRUSTED_ORIGINS = envvar(
+    "CSRF_TRUSTED_ORIGINS", cast=split_env_str,
+    default="http://localhost,http://127.0.0.1,https://0.0.0.0"
+)
 
 AUTH_USER_MODEL = "Accounts.CustomUser"
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -69,6 +78,14 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# CORS settings
+CORS_ALLOW_CREDENTIALS = envvar("CORS_ALLOW_CREDENTIALS", cast=bool, default=True)
+CORS_ALLOWED_ORIGINS = envvar(
+    "CORS_ALLOWED_ORIGINS", cast=split_env_str,
+    default="http://localhost,http://127.0.0.1,https://0.0.0.0"
+)
+
 
 ROOT_URLCONF = "zionnet.urls"
 
@@ -167,16 +184,6 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), #noqa
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7)
 }
-
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = [
-    "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS",
-]
-CORS_ALLOW_HEADERS = [
-    "Accept", "Content-Type", "Authorization",
-]
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = "smtp.gmail.com"
